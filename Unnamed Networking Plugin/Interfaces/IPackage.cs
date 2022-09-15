@@ -1,6 +1,6 @@
 ﻿namespace Unnamed_Networking_Plugin.Interfaces;
 
-public interface Package
+public interface IPackage
 {
     
 }
