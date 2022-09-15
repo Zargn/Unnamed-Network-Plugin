@@ -5,7 +5,14 @@ namespace Unnamed_Networking_Plugin;
 
 public class UnnamedNetworkPluginClient
 {
-    public void AddConnection(IPAddress ipAddress, int port)
+    private readonly int port;
+
+    public UnnamedNetworkPluginClient(int port)
+    {
+        this.port = port;
+    }
+    
+    public void AddConnection(IPAddress ipAddress)
     {
         throw new NotImplementedException();
     }
@@ -26,4 +33,6 @@ public class UnnamedNetworkPluginClient
     }
 
     public event Action<IPackage>? PackageReceived;
+
+    public event Action<IPAddress>? ConnectionSuccessful;
 }
