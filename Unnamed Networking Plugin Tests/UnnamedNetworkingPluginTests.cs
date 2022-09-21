@@ -8,17 +8,16 @@ public class UnnamedNetworkingPluginTests
 {
     private UnnamedNetworkPluginClient localServer;
     private EventWaitHandle waitHandle = new(false, EventResetMode.ManualReset);
-    
+
     [SetUp]
     public void Setup()
     {
         new Thread(TestServer).Start();
     }
     
-    private UnnamedNetworkPluginClient GetConnectedClient()
+    private UnnamedNetworkPluginClient GetClient()
     {
         var networkPlugin = new UnnamedNetworkPluginClient(25565);
-        networkPlugin.AddConnection(IPAddress.Parse("127.1.1.1"));
         return networkPlugin;
     }
 
@@ -45,28 +44,48 @@ public class UnnamedNetworkingPluginTests
         waitHandle.Set();
     }
 
-    private bool ConnectionSuccessful(UnnamedNetworkPluginClient client)
+    //TODO: THIS DOES NOT WORK.
+    //Execution is running synchronous instead of async.
+    private async Task<bool> ConnectionSuccessful(UnnamedNetworkPluginClient client)
     {
+        Console.WriteLine("Start scan");
         client.ConnectionSuccessful += HandleSuccessfulConnectionEvent;
-        var result = waitHandle.WaitOne(1000);
+        var tempTask = temp();
+        var result = await tempTask;
         client.ConnectionSuccessful -= HandleSuccessfulConnectionEvent;
+        Console.WriteLine($"End scan [{result}]");
+        
         return result;
     }
-    
-    
+
+    // This is where the problem lies. WaitOne() does not work async, and instead just pauses the entire thread.
+    private async Task<bool> temp()
+    {
+        var result = waitHandle.WaitOne(1000);
+        return result;
+    }
+
 
     [Test]
-    public void ClientReportsSuccessfulConnection()
+    public async Task ClientReportsSuccessfulConnection()
     {
-        var client = GetConnectedClient();
-        Assert.IsTrue(ConnectionSuccessful(client));
+        var client = GetClient();
+        Console.WriteLine("Got client");
+        var connectionSuccessful = ConnectionSuccessful(client);
+        Console.WriteLine("Started scan task");
+        client.AddConnection(IPAddress.Loopback);
+        Console.WriteLine("Added connection");
+        await connectionSuccessful;
+        Assert.IsTrue(connectionSuccessful.Result);
     }
     
     [Test]
     public void ServerReportsSuccessfulConnection()
     {
-        var client = GetConnectedClient();
-        Assert.IsTrue(ConnectionSuccessful(localServer));
+        var client = GetClient();
+        var connectionSuccessful = ConnectionSuccessful(localServer);
+        client.AddConnection(IPAddress.Loopback);
+        Assert.IsTrue(connectionSuccessful.Result);
     }
 
     [Test]
