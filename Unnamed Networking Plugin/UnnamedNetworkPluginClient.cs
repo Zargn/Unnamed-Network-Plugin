@@ -32,7 +32,36 @@ public class UnnamedNetworkPluginClient
         throw new NotImplementedException();
     }
 
-    public event Action<IPackage>? PackageReceived;
+    public event EventHandler<PackageReceivedEventArgs> PackageReceived;
 
-    public event Action<IPAddress>? ConnectionSuccessful;
+    public event EventHandler<ConnectionReceivedEventArgs> ConnectionSuccessful;
+}
+
+
+/// <summary>
+/// Event information for successful connections.
+/// </summary>
+public class ConnectionReceivedEventArgs
+{
+    public ConnectionReceivedEventArgs(IPAddress connectionIpAddress)
+    {
+        ConnectionIpAddress = connectionIpAddress;
+    }
+    
+    public IPAddress ConnectionIpAddress { get; }
+}
+
+/// <summary>
+/// Event information for received packages.
+/// </summary>
+public class PackageReceivedEventArgs
+{
+    public PackageReceivedEventArgs(IPackage receivedPackage, IPAddress senderIpAddress)
+    {
+        SenderIpAddress = senderIpAddress;
+        ReceivedPackage = receivedPackage;
+    }
+    
+    public IPAddress SenderIpAddress { get; }
+    public IPackage ReceivedPackage { get; }
 }
