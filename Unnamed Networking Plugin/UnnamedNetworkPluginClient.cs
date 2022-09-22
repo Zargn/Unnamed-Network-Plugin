@@ -12,9 +12,14 @@ public class UnnamedNetworkPluginClient
         this.port = port;
     }
     
-    public void AddConnection(IPAddress ipAddress)
+    public async Task<bool> AddConnection(IPAddress ipAddress)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("Attempting connection...");
+        await Task.Delay(250);
+        ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
+        Console.WriteLine("Connection successful!");
+        return true;
+        // throw new NotImplementedException();
     }
 
     public void RemoveConnection(IPAddress connectionIp)
@@ -32,9 +37,9 @@ public class UnnamedNetworkPluginClient
         throw new NotImplementedException();
     }
 
-    public event EventHandler<PackageReceivedEventArgs> PackageReceived;
+    public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
 
-    public event EventHandler<ConnectionReceivedEventArgs> ConnectionSuccessful;
+    public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 }
 
 
