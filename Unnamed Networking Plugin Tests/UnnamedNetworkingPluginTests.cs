@@ -59,26 +59,44 @@ public class UnnamedNetworkingPluginTests
     }
 
     // This is where the problem lies. WaitOne() does not work async, and instead just pauses the entire thread.
-    private async Task<bool> temp()
+    private Task<bool> temp()
     {
-        var result = waitHandle.WaitOne(1000);
-        return result;
+        return new Task<bool>(() =>
+        {
+            // var result = waitHandle.WaitOne(1000);
+            Thread.Sleep(1000);
+
+            // return result;
+            return false;
+        });
     }
 
 
+    
+    // #################################################################################################################
+    // ## Tests                                                                                                       ##
+    // #################################################################################################################
+    
     [Test]
     public async Task ClientReportsSuccessfulConnection()
     {
         var client = GetClient();
         Console.WriteLine("Got client");
-        var connectionSuccessful = ConnectionSuccessful(client);
-        Console.WriteLine("Started scan task");
-        client.AddConnection(IPAddress.Loopback);
-        Console.WriteLine("Added connection");
-        await connectionSuccessful;
-        Assert.IsTrue(connectionSuccessful.Result);
+        var connectionResult = client.AddConnection(IPAddress.Loopback);
+        await connectionResult;
+        Assert.IsTrue(connectionResult.Result);
     }
     
+    [Test]
+    public async Task ClientReportsUnsuccessfulConnection()
+    {
+        var client = GetClient();
+        Console.WriteLine("Got client");
+        var connectionResult = client.AddConnection(IPAddress.Loopback);
+        await connectionResult;
+        Assert.IsFalse(connectionResult.Result);
+    }
+
     [Test]
     public void ServerReportsSuccessfulConnection()
     {
