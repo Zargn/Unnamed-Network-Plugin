@@ -12,7 +12,7 @@ public class UnnamedNetworkPluginClient
         this.port = port;
     }
     
-    public async Task<bool> AddConnection(IPAddress ipAddress)
+    public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
     {
         Console.WriteLine("Attempting connection...");
         await Task.Delay(250);

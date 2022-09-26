@@ -9,15 +9,17 @@ public class UnnamedNetworkingPluginTests
     private UnnamedNetworkPluginClient localServer;
     private EventWaitHandle waitHandle = new(false, EventResetMode.ManualReset);
 
+    private const int TimeOutLimit = 2000;
+    
     [SetUp]
     public void Setup()
     {
         new Thread(TestServer).Start();
     }
     
-    private UnnamedNetworkPluginClient GetClient()
+    private UnnamedNetworkPluginClient GetClient(int port = 25565)
     {
-        var networkPlugin = new UnnamedNetworkPluginClient(25565);
+        var networkPlugin = new UnnamedNetworkPluginClient(port);
         return networkPlugin;
     }
 
@@ -33,78 +35,78 @@ public class UnnamedNetworkingPluginTests
     {
         localServer.SendPackageToAllConnections(e.ReceivedPackage);
     }
-    
-    private void HandleSuccessfulConnectionEvent(object? sender, ConnectionReceivedEventArgs e)
+
+    private async Task Timeout()
     {
-        SetWaitHandle();
+        Console.WriteLine("Started timer");
+        await Task.Delay(TimeOutLimit);
+        Console.WriteLine("Time has run out");
     }
 
-    private void SetWaitHandle()
+    private Task Listener(SemaphoreSlim signal)
     {
-        waitHandle.Set();
-    }
-
-    //TODO: THIS DOES NOT WORK.
-    //Execution is running synchronous instead of async.
-    private async Task<bool> ConnectionSuccessful(UnnamedNetworkPluginClient client)
-    {
-        Console.WriteLine("Start scan");
-        client.ConnectionSuccessful += HandleSuccessfulConnectionEvent;
-        var tempTask = temp();
-        var result = await tempTask;
-        client.ConnectionSuccessful -= HandleSuccessfulConnectionEvent;
-        Console.WriteLine($"End scan [{result}]");
-        
-        return result;
-    }
-
-    // This is where the problem lies. WaitOne() does not work async, and instead just pauses the entire thread.
-    private Task<bool> temp()
-    {
-        return new Task<bool>(() =>
+        return new Task(() =>
         {
-            // var result = waitHandle.WaitOne(1000);
-            Thread.Sleep(1000);
-
-            // return result;
-            return false;
+            Console.WriteLine("Started listener");
+            signal.Wait();
+            Console.WriteLine("Listener triggered");
         });
     }
 
+    
 
+    // TODO: HAve server and client instead be on the same thread and created in each test, using async instead of threads.
     
     // #################################################################################################################
     // ## Tests                                                                                                       ##
     // #################################################################################################################
     
     [Test]
-    public async Task ClientReportsSuccessfulConnection()
+    public async Task ClientReportsSuccessfulOutgoingConnection()
     {
         var client = GetClient();
         Console.WriteLine("Got client");
-        var connectionResult = client.AddConnection(IPAddress.Loopback);
+        var connectionResult = client.AddConnection(IPAddress.Loopback, 25565);
         await connectionResult;
         Assert.IsTrue(connectionResult.Result);
     }
     
     [Test]
-    public async Task ClientReportsUnsuccessfulConnection()
+    public async Task ClientReportsUnsuccessfulOutgoingConnection()
     {
         var client = GetClient();
         Console.WriteLine("Got client");
-        var connectionResult = client.AddConnection(IPAddress.Loopback);
+        var connectionResult = client.AddConnection(IPAddress.Loopback, 25565);
         await connectionResult;
         Assert.IsFalse(connectionResult.Result);
     }
 
     [Test]
-    public void ServerReportsSuccessfulConnection()
+    public async Task ClientReportsSuccessfulIncomingConnection()
     {
-        var client = GetClient();
-        var connectionSuccessful = ConnectionSuccessful(localServer);
-        client.AddConnection(IPAddress.Loopback);
-        Assert.IsTrue(connectionSuccessful.Result);
+        // Create instances
+        var client = GetClient(25566);
+        var server = GetClient();
+        
+        // Listener
+        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
+        server.ConnectionSuccessful += (sender, args) =>
+        {
+            Console.WriteLine("Received connection");
+            signal.Release();
+        };
+
+        var timeout = Timeout();
+        var listener = Listener(signal);
+        
+        // Create connection
+        client.AddConnection(IPAddress.Loopback, 65565);
+
+        // Await and test result.
+        Task.WaitAny(timeout, listener);
+        Assert.IsTrue(listener.IsCompleted);
     }
+
 
     [Test]
     public void ConnectionToInvalidIpReturnsError()
