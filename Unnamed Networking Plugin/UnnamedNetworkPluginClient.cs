@@ -14,12 +14,12 @@ public class UnnamedNetworkPluginClient
     
     public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
     {
-        Console.WriteLine("Attempting connection...");
-        await Task.Delay(250);
-        ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
-        Console.WriteLine("Connection successful!");
-        return true;
-        // throw new NotImplementedException();
+        // Console.WriteLine("Attempting connection...");
+        // await Task.Delay(250);
+        // ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
+        // Console.WriteLine("Connection successful!");
+        // return true;
+        throw new NotImplementedException();
     }
 
     public void RemoveConnection(IPAddress connectionIp)
@@ -29,6 +29,7 @@ public class UnnamedNetworkPluginClient
 
     public void SendPackage(IPackage package, IPAddress connectionIp)
     {
+        // PackageReceived?.Invoke(this, new PackageReceivedEventArgs(package, IPAddress.Loopback));
         throw new NotImplementedException();
     }
 

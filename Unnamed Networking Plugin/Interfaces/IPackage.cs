@@ -2,5 +2,5 @@
 
 public interface IPackage
 {
-    
+    public string Type { get; init; }
 }

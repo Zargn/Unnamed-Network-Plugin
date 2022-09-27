@@ -1,6 +1,7 @@
 using System.Net;
 using NUnit.Framework.Internal.Execution;
 using Unnamed_Networking_Plugin;
+using Unnamed_Networking_Plugin.Interfaces;
 
 namespace Unnamed_Networking_Plugin_Tests;
 
@@ -43,17 +44,13 @@ public class UnnamedNetworkingPluginTests
         Console.WriteLine("Time has run out");
     }
 
-    private Task Listener(SemaphoreSlim signal)
+    private async Task Listener(SemaphoreSlim signal)
     {
-        return new Task(() =>
-        {
-            Console.WriteLine("Started listener");
-            signal.Wait();
-            Console.WriteLine("Listener triggered");
-        });
+        Console.WriteLine("Started listener");
+        await signal.WaitAsync();
+        Console.WriteLine("Listener triggered");
     }
 
-    
 
     // TODO: HAve server and client instead be on the same thread and created in each test, using async instead of threads.
     
@@ -98,7 +95,7 @@ public class UnnamedNetworkingPluginTests
 
         var timeout = Timeout();
         var listener = Listener(signal);
-        
+
         // Create connection
         client.AddConnection(IPAddress.Loopback, 65565);
 
@@ -115,6 +112,48 @@ public class UnnamedNetworkingPluginTests
     }
 
     [Test]
+    public async Task PackageCanBeTransmitted()
+    {
+        var sender = GetClient(25566);
+        var receiver = GetClient();
+
+        TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
+
+        bool success = false;
+
+        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
+        receiver.PackageReceived += (o, args) =>
+        {
+            Console.WriteLine("Package received");
+            var receivedPackage = args.ReceivedPackage;
+            if (receivedPackage.Type == package.Type)
+            {
+                Console.WriteLine("Package type match");
+
+                if (Equals((receivedPackage as TestPackage).TestData, package.TestData))
+                {
+                    Console.WriteLine("Package contents match");
+                    success = true;
+                    signal.Release();
+                    return;
+                }
+            }
+
+            success = false;
+            signal.Release();
+        };
+
+        var timeout = Timeout();
+        var listener = Listener(signal);
+
+        await sender.AddConnection(IPAddress.Loopback, 25565);
+        sender.SendPackage(package, IPAddress.Loopback);
+
+        Task.WaitAny(timeout, listener);
+        Assert.IsTrue(success);
+    }
+
+    [Test]
     public void MessageIsSentCorrectly()
     {
         
@@ -123,7 +162,6 @@ public class UnnamedNetworkingPluginTests
     [Test]
     public void MessageIsReceivedCorrectly()
     {
-        
+
     }
-    
 }
