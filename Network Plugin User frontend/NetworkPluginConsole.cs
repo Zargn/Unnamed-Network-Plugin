@@ -1,4 +1,7 @@
-﻿namespace Network_Plugin_User_frontend;
+﻿using System.Net;
+using Unnamed_Networking_Plugin;
+
+namespace Network_Plugin_User_frontend;
 
 public static class Initializer
 {
@@ -11,6 +14,9 @@ public static class Initializer
 
 public class NetworkPluginConsole
 {
+    private UnnamedNetworkPluginClient client = new(25565);
+    private UnnamedNetworkPluginClient server = new(25566);
+    
     public void Run()
     {
         new Thread(ServerThread).Start();
@@ -22,8 +28,9 @@ public class NetworkPluginConsole
         
     }
     
-    private void MainLoop()
+    private async Task MainLoop()
     {
+        await client.AddConnection(IPAddress.Loopback, 25565);
         while (true)
         {
             var operation = GetUserInput();
@@ -75,7 +82,7 @@ public class NetworkPluginConsole
     {
         Console.WriteLine("Please enter message to send: ");
         var message = Console.ReadLine();
-        throw new NotImplementedException("Sending messages has not yet been implemented!");
+        throw new NotImplementedException();
     }
 
     private void RequestMessages()

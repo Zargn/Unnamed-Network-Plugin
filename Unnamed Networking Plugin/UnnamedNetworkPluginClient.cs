@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Sockets;
 using Unnamed_Networking_Plugin.Interfaces;
 
 namespace Unnamed_Networking_Plugin;
@@ -7,6 +8,8 @@ public class UnnamedNetworkPluginClient
 {
     private readonly int port;
 
+    private Dictionary<Connection, int> Connections = new();
+
     public UnnamedNetworkPluginClient(int port)
     {
         this.port = port;
@@ -14,11 +17,35 @@ public class UnnamedNetworkPluginClient
     
     public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
     {
-        // Console.WriteLine("Attempting connection...");
-        // await Task.Delay(250);
-        // ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
-        // Console.WriteLine("Connection successful!");
-        // return true;
+        var tcpClient = new TcpClient();
+        try
+        {
+            await tcpClient.ConnectAsync(ipAddress, targetPort);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"An error occured when attempting to connect to {ipAddress}:{targetPort}");
+            throw;
+        }
+
+        var connection = new Connection(ipAddress, targetPort, tcpClient ,tcpClient.GetStream());
+        
+        
+        
+        // TODO: The connection class should maybe be the one with the Send/Receive package events/methods.
+        // Current plan:
+        // 1. Finish the connection class. A instance of this class will be created on each successful incoming our
+        // outgoing connection. It should contain information about the connection, and the data stream used to send and
+        // receive data. 
+        
+        
+        // Todo: This might be useful by making each connection have a "Read" method that uses this following method.
+        // Then I can use one while loop in the main class that has a Task.WaitAny() or similar.
+        // StreamReader sr = new StreamReader(connection.DataStream);
+        // sr.ReadLineAsync();
+        
+        
+        
         throw new NotImplementedException();
     }
 

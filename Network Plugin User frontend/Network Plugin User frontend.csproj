@@ -8,4 +8,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Unnamed Networking Plugin\Unnamed Networking Plugin.csproj" />
+    </ItemGroup>
+
 </Project>
