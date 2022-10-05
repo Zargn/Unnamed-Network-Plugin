@@ -7,12 +7,16 @@ namespace Unnamed_Networking_Plugin;
 public class UnnamedNetworkPluginClient
 {
     private readonly int port;
+    private int nextConnectionId = 0;
+    private Listener listener;
 
     private Dictionary<Connection, int> Connections = new();
 
     public UnnamedNetworkPluginClient(int port)
     {
         this.port = port;
+        listener = new Listener(this, port);
+        listener.Start();
     }
     
     public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
@@ -28,8 +32,8 @@ public class UnnamedNetworkPluginClient
             throw;
         }
 
-        var connection = new Connection(ipAddress, targetPort, tcpClient ,tcpClient.GetStream());
-        
+        var connection = new Connection(tcpClient ,tcpClient.GetStream());
+        AddConnectionToList(connection);
         
         
         // TODO: The connection class should maybe be the one with the Send/Receive package events/methods.
@@ -43,10 +47,16 @@ public class UnnamedNetworkPluginClient
         // Then I can use one while loop in the main class that has a Task.WaitAny() or similar.
         // StreamReader sr = new StreamReader(connection.DataStream);
         // sr.ReadLineAsync();
-        
-        
+
+        return true;
         
         throw new NotImplementedException();
+    }
+
+    internal void AddConnectionToList(Connection connection)
+    {
+        Connections.Add(connection, nextConnectionId++);
+        ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
     }
 
     public void RemoveConnection(IPAddress connectionIp)
