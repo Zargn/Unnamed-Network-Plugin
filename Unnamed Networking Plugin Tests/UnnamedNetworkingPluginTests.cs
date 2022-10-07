@@ -15,7 +15,7 @@ public class UnnamedNetworkingPluginTests
     [SetUp]
     public void Setup()
     {
-        new Thread(TestServer).Start();
+        // new Thread(TestServer).Start();
     }
     
     private UnnamedNetworkPluginClient GetClient(int port = 25565)
@@ -81,13 +81,13 @@ public class UnnamedNetworkingPluginTests
     [Test]
     public async Task ClientReportsSuccessfulIncomingConnection()
     {
-        // Create instances
+        // Create instance
         var client = GetClient(25566);
-        var server = GetClient();
+        // var server = GetClient();
         
         // Listener
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-        server.ConnectionSuccessful += (sender, args) =>
+        client.ConnectionSuccessful += (sender, args) =>
         {
             Console.WriteLine("Received connection");
             signal.Release();
@@ -97,7 +97,7 @@ public class UnnamedNetworkingPluginTests
         var listener = Listener(signal);
 
         // Create connection
-        client.AddConnection(IPAddress.Loopback, 65565);
+        client.AddConnection(IPAddress.Loopback, 25566);
 
         // Await and test result.
         Task.WaitAny(timeout, listener);
@@ -105,11 +105,11 @@ public class UnnamedNetworkingPluginTests
     }
 
 
-    [Test]
-    public void ConnectionToInvalidIpReturnsError()
-    {
-        
-    }
+    // [Test]
+    // public void ConnectionToInvalidIpReturnsError()
+    // {
+    //     
+    // }
 
     [Test]
     public async Task PackageCanBeTransmitted()
@@ -152,16 +152,16 @@ public class UnnamedNetworkingPluginTests
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(success);
     }
-
-    [Test]
-    public void MessageIsSentCorrectly()
-    {
-        
-    }
-
-    [Test]
-    public void MessageIsReceivedCorrectly()
-    {
-
-    }
+    
+    // [Test]
+    // public void MessageIsSentCorrectly()
+    // {
+    //     
+    // }
+    //
+    // [Test]
+    // public void MessageIsReceivedCorrectly()
+    // {
+    //
+    // }
 }
