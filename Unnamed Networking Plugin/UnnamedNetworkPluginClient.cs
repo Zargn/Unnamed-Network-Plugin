@@ -6,15 +6,20 @@ namespace Unnamed_Networking_Plugin;
 
 public class UnnamedNetworkPluginClient
 {
+    internal ILogger logger;
+    internal IJsonSerializer jsonSerializer;
+    
     private readonly int port;
     private int nextConnectionId = 0;
     private Listener listener;
 
     private Dictionary<Connection, int> Connections = new();
 
-    public UnnamedNetworkPluginClient(int port)
+    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer)
     {
         this.port = port;
+        this.logger = logger;
+        this.jsonSerializer = jsonSerializer;
         listener = new Listener(this, port);
         listener.Start();
     }
@@ -32,7 +37,7 @@ public class UnnamedNetworkPluginClient
             throw;
         }
 
-        var connection = new Connection(tcpClient ,tcpClient.GetStream());
+        var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
         AddConnectionToList(connection);
         
         

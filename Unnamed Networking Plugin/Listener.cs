@@ -34,7 +34,7 @@ public class Listener
         while (true)
         {
             var client = await tcpListener.AcceptTcpClientAsync();
-            var connection = new Connection(client, client.GetStream());
+            var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
             unnamedNetworkPluginClient.AddConnectionToList(connection);
         }
     }
