@@ -20,13 +20,13 @@ public class UnnamedNetworkingPluginTests
     
     private UnnamedNetworkPluginClient GetClient(int port = 25565)
     {
-        var networkPlugin = new UnnamedNetworkPluginClient(port);
+        var networkPlugin = new UnnamedNetworkPluginClient(port, new Logger(), new JsonSerializerAdapter());
         return networkPlugin;
     }
 
     private void TestServer()
     {
-        localServer = new UnnamedNetworkPluginClient(25565);
+        localServer = new UnnamedNetworkPluginClient(25565, new Logger(), new JsonSerializerAdapter());
         
         // Send the same received package back to all connected clients.
         localServer.PackageReceived += HandlePackageReceivedEvent;

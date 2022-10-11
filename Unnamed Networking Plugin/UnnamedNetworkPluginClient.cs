@@ -13,7 +13,7 @@ public class UnnamedNetworkPluginClient
     private int nextConnectionId = 0;
     private Listener listener;
 
-    private Dictionary<Connection, int> Connections = new();
+    private Dictionary<int, Connection> Connections = new();
 
     public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer)
     {
@@ -60,7 +60,7 @@ public class UnnamedNetworkPluginClient
 
     internal void AddConnectionToList(Connection connection)
     {
-        Connections.Add(connection, nextConnectionId++);
+        Connections.Add(nextConnectionId++, connection);
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
     }
 

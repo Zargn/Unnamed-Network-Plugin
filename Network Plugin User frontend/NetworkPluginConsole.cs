@@ -14,8 +14,8 @@ public static class Initializer
 
 public class NetworkPluginConsole
 {
-    private UnnamedNetworkPluginClient client = new(25565);
-    private UnnamedNetworkPluginClient server = new(25566);
+    private UnnamedNetworkPluginClient client = new(25565, new Logger(), new JsonSerializerAdapter());
+    private UnnamedNetworkPluginClient server = new(25566, new Logger(), new JsonSerializerAdapter());
     
     public void Run()
     {
