@@ -30,6 +30,18 @@ public class Connection
         streamWriter = new StreamWriter(dataStream);
     }
 
+    public async Task SendPackage(IPackage package)
+    {
+        var json = jsonSerializer.Serialize(package);
+        if (json == null)
+        {
+            logger.Log(this, "Result Json was null", LogType.Warning);
+            return;
+        }
+
+        await streamWriter.WriteLineAsync(json);
+    }
+
     public async Task<IPackage> ReceivePackage()
     {
         while (true)
