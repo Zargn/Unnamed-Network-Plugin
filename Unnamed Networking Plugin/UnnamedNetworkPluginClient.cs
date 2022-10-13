@@ -20,7 +20,7 @@ public class UnnamedNetworkPluginClient
         this.port = port;
         this.logger = logger;
         this.jsonSerializer = jsonSerializer;
-        listener = new Listener(this, port);
+        listener = new Listener(this, port, logger);
         listener.Start();
     }
     
@@ -61,6 +61,10 @@ public class UnnamedNetworkPluginClient
     internal void AddConnectionToList(Connection connection)
     {
         Connections.Add(nextConnectionId++, connection);
+        connection.PackageReceived += (o, args) =>
+        {
+            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, IPAddress.Loopback));
+        };
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
     }
 
@@ -69,18 +73,21 @@ public class UnnamedNetworkPluginClient
         throw new NotImplementedException();
     }
 
-    public void SendPackage(IPackage package, IPAddress connectionIp)
+    public void SendPackage<T>(T package, IPAddress connectionIp)
+    where T : IPackage
     {
         // PackageReceived?.Invoke(this, new PackageReceivedEventArgs(package, IPAddress.Loopback));
         throw new NotImplementedException();
     }
 
-    public void SendPackageToAllConnections(IPackage package)
+    public async Task SendPackageToAllConnections<T>(T package)
+    where T : IPackage
     {
-        throw new NotImplementedException();
+        var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendPackage(package)).ToArray();
+        await Task.WhenAll(sendTasks);
     }
 
-    public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
+    public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
 
     public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 }
@@ -100,16 +107,14 @@ public class ConnectionReceivedEventArgs
 }
 
 /// <summary>
-/// Event information for received packages.
+/// Event information for received packages and their source.
 /// </summary>
-public class PackageReceivedEventArgs
+public class PackageReceivedEventDetailedArgs : PackageReceivedEventArgs
 {
-    public PackageReceivedEventArgs(IPackage receivedPackage, IPAddress senderIpAddress)
+    public PackageReceivedEventDetailedArgs(IPackage receivedPackage, IPAddress senderIpAddress) : base(receivedPackage)
     {
         SenderIpAddress = senderIpAddress;
-        ReceivedPackage = receivedPackage;
     }
     
     public IPAddress SenderIpAddress { get; }
-    public IPackage ReceivedPackage { get; }
 }

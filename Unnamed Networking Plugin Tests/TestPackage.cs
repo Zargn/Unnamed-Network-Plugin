@@ -2,6 +2,7 @@
 
 namespace Unnamed_Networking_Plugin_Tests;
 
+[System.Serializable]
 public class TestPackage : Package
 {
     public TestData TestData { get; init; }
@@ -12,6 +13,7 @@ public class TestPackage : Package
     }
 }
 
+[System.Serializable]
 public class TestData
 {
     public string text { get; init; }
@@ -23,6 +25,11 @@ public class TestData
         this.text = text;
         this.integer = integer;
         this.floatingPointInteger = floatingPointInteger;
+    }
+
+    public override string ToString()
+    {
+        return $"text: {text}, integer: {integer}, floatingPointInteger: {floatingPointInteger}";
     }
 
     public override bool Equals(object? obj)

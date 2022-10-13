@@ -2,6 +2,7 @@
 
 namespace Unnamed_Networking_Plugin;
 
+[Serializable]
 public class Package : IPackage
 {
     public string Type { get; init; }

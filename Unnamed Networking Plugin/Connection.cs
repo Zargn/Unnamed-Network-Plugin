@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Threading.Channels;
 using Unnamed_Networking_Plugin.Interfaces;
 
 namespace Unnamed_Networking_Plugin;
@@ -10,12 +11,17 @@ public class Connection
     // public int ConnectedPort { get; }
     public TcpClient TcpClient { get; }
     public Stream DataStream { get; }
+    
+    public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
+    // public event EventHandler<> 
 
     private StreamReader streamReader { get; }
     private StreamWriter streamWriter { get; }
 
     private IJsonSerializer jsonSerializer;
     private ILogger logger;
+
+    private Task packageListenerTask;
 
 
     public Connection(TcpClient tcpClient, Stream dataStream, IJsonSerializer jsonSerializer, ILogger logger)
@@ -28,22 +34,37 @@ public class Connection
         this.logger = logger;
         streamReader = new StreamReader(dataStream);
         streamWriter = new StreamWriter(dataStream);
+        logger.Log(this, "Connection created", LogType.Information);
+
+        
+        
+        packageListenerTask = PackageListener();
     }
 
-    public async Task SendPackage(IPackage package)
+    public void Destroy()
     {
-        var json = jsonSerializer.Serialize(package);
+        packageListenerTask.Dispose();
+    }
+
+    public async Task SendPackage<T>(T package)
+    where T : IPackage
+    {
+        var json = jsonSerializer.Serialize<T>(package);
         if (json == null)
         {
             logger.Log(this, "Result Json was null", LogType.Warning);
             return;
         }
 
+        Console.WriteLine(json);
+        
         await streamWriter.WriteLineAsync(json);
+        await streamWriter.FlushAsync();
     }
 
-    public async Task<IPackage> ReceivePackage()
-    {
+    public async Task PackageListener()
+    { 
+        logger.Log(this, "PackageListener started", LogType.Information);
         while (true)
         {
             try
@@ -79,7 +100,7 @@ public class Connection
                     continue;
                 }
                 
-                return resultPackage;
+                PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage));
             }
             catch (Exception e)
             {
@@ -88,4 +109,16 @@ public class Connection
             }
         }
     }
+}
+
+/// <summary>
+/// Event information for received packages.
+/// </summary>
+public class PackageReceivedEventArgs
+{
+    public PackageReceivedEventArgs(IPackage receivedPackage)
+    {
+        ReceivedPackage = receivedPackage;
+    }
+    public IPackage ReceivedPackage { get; }
 }

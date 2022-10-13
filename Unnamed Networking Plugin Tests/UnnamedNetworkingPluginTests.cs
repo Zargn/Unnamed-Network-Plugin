@@ -71,9 +71,9 @@ public class UnnamedNetworkingPluginTests
     [Test]
     public async Task ClientReportsUnsuccessfulOutgoingConnection()
     {
-        var client = GetClient();
+        var client = GetClient(25566);
         Console.WriteLine("Got client");
-        var connectionResult = client.AddConnection(IPAddress.Loopback, 25565);
+        var connectionResult = client.AddConnection(IPAddress.Loopback, 25566);
         await connectionResult;
         Assert.IsFalse(connectionResult.Result);
     }
@@ -82,23 +82,23 @@ public class UnnamedNetworkingPluginTests
     public async Task ClientReportsSuccessfulIncomingConnection()
     {
         // Create instance
-        var client = GetClient(25566);
+        var client = GetClient(25567);
         // var server = GetClient();
         
         // Listener
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
         client.ConnectionSuccessful += (sender, args) =>
         {
-            Console.WriteLine("Received connection");
+            Console.WriteLine("Received connection event triggered");
             signal.Release();
         };
-
+    
         var timeout = Timeout();
         var listener = Listener(signal);
-
+    
         // Create connection
-        client.AddConnection(IPAddress.Loopback, 25566);
-
+        client.AddConnection(IPAddress.Loopback, 25567);
+    
         // Await and test result.
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
@@ -114,23 +114,28 @@ public class UnnamedNetworkingPluginTests
     [Test]
     public async Task PackageCanBeTransmitted()
     {
-        var sender = GetClient(25566);
-        var receiver = GetClient();
+        var sender = GetClient(25568);
+        // var receiver = GetClient();
 
         TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
 
         bool success = false;
 
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-        receiver.PackageReceived += (o, args) =>
+        sender.PackageReceived += (o, args) =>
         {
             Console.WriteLine("Package received");
             var receivedPackage = args.ReceivedPackage;
             if (receivedPackage.Type == package.Type)
             {
                 Console.WriteLine("Package type match");
+                Console.WriteLine(receivedPackage);
 
-                if (Equals((receivedPackage as TestPackage).TestData, package.TestData))
+                var resultPackage = receivedPackage as TestPackage;
+                Console.WriteLine(package.TestData);
+                Console.WriteLine(resultPackage.TestData);
+                
+                if (Equals(resultPackage.TestData, package.TestData))
                 {
                     Console.WriteLine("Package contents match");
                     success = true;
@@ -140,14 +145,16 @@ public class UnnamedNetworkingPluginTests
             }
 
             success = false;
+            Console.WriteLine("Package received with problems");
             signal.Release();
         };
 
         var timeout = Timeout();
         var listener = Listener(signal);
 
-        await sender.AddConnection(IPAddress.Loopback, 25565);
-        sender.SendPackage(package, IPAddress.Loopback);
+        await sender.AddConnection(IPAddress.Loopback, 25568);
+        // sender.SendPackage(package, IPAddress.Loopback);
+        await sender.SendPackageToAllConnections(package);
 
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(success);

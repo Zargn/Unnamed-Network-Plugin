@@ -19,6 +19,6 @@ public class JsonSerializerAdapter : IJsonSerializer
 
     public object? Deserialize(string json, Type type)
     {
-        return JsonSerializer.Deserialize(json, type);
+        return JsonSerializer.Deserialize(json, type, options);
     }
 }
