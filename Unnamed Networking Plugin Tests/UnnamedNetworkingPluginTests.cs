@@ -50,6 +50,16 @@ public class UnnamedNetworkingPluginTests
         await signal.WaitAsync();
         Console.WriteLine("Listener triggered");
     }
+    
+    private async Task Listener(IEnumerable<SemaphoreSlim> signals)
+    {
+        Console.WriteLine("Started listener");
+        foreach (var signal in signals)
+        {
+            await signal.WaitAsync();
+        }
+        Console.WriteLine("Listener triggered");
+    }
 
 
     // TODO: HAve server and client instead be on the same thread and created in each test, using async instead of threads.
@@ -100,6 +110,38 @@ public class UnnamedNetworkingPluginTests
         client.AddConnection(IPAddress.Loopback, 25567);
     
         // Await and test result.
+        Task.WaitAny(timeout, listener);
+        Assert.IsTrue(listener.IsCompleted);
+    }
+
+    [Test]
+    public async Task ClientCanConnectToMultipleClients()
+    {
+        var client = GetClient(25569);
+        var client1 = GetClient(25570);
+        var client2 = GetClient(25571);
+        
+        // Listeners:
+        var signal1 = new SemaphoreSlim(0, 1);
+        var signal2 = new SemaphoreSlim(0, 1);
+        client1.ConnectionSuccessful += (sender, args) =>
+        {
+            Console.WriteLine("Client1 connection event triggered");
+            signal1.Release();
+        };
+        client2.ConnectionSuccessful += (sender, args) =>
+        {
+            Console.WriteLine("Client2 connection event triggered");
+            signal2.Release();
+        };
+
+        var timeout = Timeout();
+        var listener = Listener(new[] {signal1, signal2});
+
+        // Create connections
+        client.AddConnection(IPAddress.Loopback, 25570);
+        client.AddConnection(IPAddress.Loopback, 25571);
+
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
     }
