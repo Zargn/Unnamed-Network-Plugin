@@ -33,8 +33,9 @@ public class UnnamedNetworkPluginClient
         }
         catch (Exception e)
         {
-            Console.WriteLine($"An error occured when attempting to connect to {ipAddress}:{targetPort}");
-            throw;
+//             logger.Log(this, @$"An error occured when attempting to connect to {ipAddress}:{targetPort} 
+// {e}", LogType.HandledError);
+            return false;
         }
 
         var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
