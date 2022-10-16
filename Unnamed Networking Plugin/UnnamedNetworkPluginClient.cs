@@ -33,30 +33,15 @@ public class UnnamedNetworkPluginClient
         }
         catch (Exception e)
         {
-//             logger.Log(this, @$"An error occured when attempting to connect to {ipAddress}:{targetPort} 
-// {e}", LogType.HandledError);
+            logger.Log(this, @$"An error occured when attempting to connect to {ipAddress}:{targetPort} 
+{e}", LogType.HandledError);
             return false;
         }
 
         var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
         AddConnectionToList(connection);
-        
-        
-        // TODO: The connection class should maybe be the one with the Send/Receive package events/methods.
-        // Current plan:
-        // 1. Finish the connection class. A instance of this class will be created on each successful incoming our
-        // outgoing connection. It should contain information about the connection, and the data stream used to send and
-        // receive data. 
-        
-        
-        // Todo: This might be useful by making each connection have a "Read" method that uses this following method.
-        // Then I can use one while loop in the main class that has a Task.WaitAny() or similar.
-        // StreamReader sr = new StreamReader(connection.DataStream);
-        // sr.ReadLineAsync();
 
         return true;
-        
-        throw new NotImplementedException();
     }
 
     internal void AddConnectionToList(Connection connection)
