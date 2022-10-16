@@ -73,7 +73,7 @@ public class UnnamedNetworkingPluginTests
     {
         var client = GetClient(25566);
         Console.WriteLine("Got client");
-        var connectionResult = client.AddConnection(IPAddress.Loopback, 25566);
+        var connectionResult = client.AddConnection(IPAddress.Loopback, 0);
         await connectionResult;
         Assert.IsFalse(connectionResult.Result);
     }
