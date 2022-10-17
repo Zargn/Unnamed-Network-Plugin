@@ -7,51 +7,45 @@ namespace Unnamed_Networking_Plugin_Tests;
 
 public class UnnamedNetworkingPluginTests
 {
-    private UnnamedNetworkPluginClient localServer;
-    private EventWaitHandle waitHandle = new(false, EventResetMode.ManualReset);
-
     private const int TimeOutLimit = 2000;
-    
-    [SetUp]
-    public void Setup()
-    {
-        // new Thread(TestServer).Start();
-    }
-    
-    private UnnamedNetworkPluginClient GetClient(int port = 25565)
+
+    /// <summary>
+    /// Gets a networking client with the provided port.
+    /// </summary>
+    /// <param name="port">Port to listen to</param>
+    /// <returns>Network client configured for selected port</returns>
+    private static UnnamedNetworkPluginClient GetClient(int port = 25565)
     {
         var networkPlugin = new UnnamedNetworkPluginClient(port, new Logger(), new JsonSerializerAdapter());
         return networkPlugin;
     }
 
-    private void TestServer()
-    {
-        localServer = new UnnamedNetworkPluginClient(25565, new Logger(), new JsonSerializerAdapter());
-        
-        // Send the same received package back to all connected clients.
-        localServer.PackageReceived += HandlePackageReceivedEvent;
-    }
-
-    private void HandlePackageReceivedEvent(object? sender, PackageReceivedEventArgs e)
-    {
-        localServer.SendPackageToAllConnections(e.ReceivedPackage);
-    }
-
-    private async Task Timeout()
+    /// <summary>
+    /// Timeout task. Completes after the constant delay has passed.
+    /// </summary>
+    private static async Task Timeout()
     {
         Console.WriteLine("Started timer");
         await Task.Delay(TimeOutLimit);
         Console.WriteLine("Time has run out");
     }
 
-    private async Task Listener(SemaphoreSlim signal)
+    /// <summary>
+    /// Listener task. Completes once the provided SemaphoreSlim gets released.
+    /// </summary>
+    /// <param name="signal">Signal to listen for.</param>
+    private static async Task Listener(SemaphoreSlim signal)
     {
         Console.WriteLine("Started listener");
         await signal.WaitAsync();
         Console.WriteLine("Listener triggered");
     }
     
-    private async Task Listener(IEnumerable<SemaphoreSlim> signals)
+    /// <summary>
+    /// Listener task. Completes once all of the provided SemaphoreSlim objects are released.
+    /// </summary>
+    /// <param name="signals">Signal to listen for.</param>
+    private static async Task Listener(IEnumerable<SemaphoreSlim> signals)
     {
         Console.WriteLine("Started listener");
         foreach (var signal in signals)
@@ -61,7 +55,14 @@ public class UnnamedNetworkingPluginTests
         Console.WriteLine("Listener triggered");
     }
 
-    private TestPackage? CheckPackage(IPackage receivedPackage, TestPackage baselinePackage, SemaphoreSlim signal)
+    /// <summary>
+    /// Checks if the provided IPackage is a TestPackage, then releases a semaphoreSlim once complete.
+    /// </summary>
+    /// <param name="receivedPackage">Received IPackage to compare with baseline package.</param>
+    /// <param name="baselinePackage"></param>
+    /// <param name="signal">Signal to release once complete.</param>
+    /// <returns>The received package if type match, otherwise null.</returns>
+    private static TestPackage? CheckPackage(IPackage receivedPackage, TestPackage baselinePackage, SemaphoreSlim signal)
     {
         Console.WriteLine("Package received");
         if (receivedPackage.Type == baselinePackage.Type)
@@ -78,10 +79,11 @@ public class UnnamedNetworkingPluginTests
     }
 
 
-    // TODO: HAve server and client instead be on the same thread and created in each test, using async instead of threads.
+    
+    
     
     // #################################################################################################################
-    // ## Tests                                                                                                       ##
+    // ## Tests ########################################################################################################
     // #################################################################################################################
     
     [Test]
@@ -105,12 +107,11 @@ public class UnnamedNetworkingPluginTests
     }
 
     [Test]
-    public async Task ClientReportsSuccessfulIncomingConnection()
+    public void ClientReportsSuccessfulIncomingConnection()
     {
         // Create instance
         var client = GetClient(25567);
-        // var server = GetClient();
-        
+
         // Listener
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
         client.ConnectionSuccessful += (sender, args) =>
@@ -131,7 +132,7 @@ public class UnnamedNetworkingPluginTests
     }
 
     [Test]
-    public async Task ClientCanConnectToMultipleClients()
+    public void ClientCanConnectToMultipleClients()
     {
         var client = GetClient(25569);
         var client1 = GetClient(25570);
@@ -162,13 +163,6 @@ public class UnnamedNetworkingPluginTests
         Assert.IsTrue(listener.IsCompleted);
     }
 
-
-    // [Test]
-    // public void ConnectionToInvalidIpReturnsError()
-    // {
-    //     
-    // }
-
     [Test]
     public async Task PackageCanBeTransmitted()
     {
@@ -195,16 +189,4 @@ public class UnnamedNetworkingPluginTests
         Assert.That(resultPackage, !Is.EqualTo(null));
         Assert.That(resultPackage.TestData, Is.EqualTo(package.TestData));
     }
-    
-    // [Test]
-    // public void MessageIsSentCorrectly()
-    // {
-    //     
-    // }
-    //
-    // [Test]
-    // public void MessageIsReceivedCorrectly()
-    // {
-    //
-    // }
 }
