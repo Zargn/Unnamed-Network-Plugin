@@ -23,7 +23,12 @@ public class UnnamedNetworkPluginClient
         listener = new Listener(this, port, logger);
         listener.Start();
     }
-    
+
+    public async Task StopListener()
+    {
+        await listener.Stop();
+    }
+
     public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
     {
         var tcpClient = new TcpClient();

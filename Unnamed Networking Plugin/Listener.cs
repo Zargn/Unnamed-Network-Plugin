@@ -12,8 +12,11 @@ public class Listener
     private int listenPort;
     
     private ILogger logger;
-    
-    
+
+    private Task listenTask;
+
+    private CancellationTokenSource cancelTokenSource;
+
     public Listener(UnnamedNetworkPluginClient unnamedNetworkPluginClient, int port, ILogger logger)
     {
         this.unnamedNetworkPluginClient = unnamedNetworkPluginClient;
@@ -28,30 +31,49 @@ public class Listener
                 "Start was called on a listener that was already running. Please check your code for duplicate calls.");
         active = true;
 
-        listenForIncomingConnectionsTask = ListenForIncomingConnections();
+        cancelTokenSource = new CancellationTokenSource(); 
+        listenTask = ListenForIncomingConnections();
     }
 
-    private Task listenForIncomingConnectionsTask;
-
-    public void Destroy()
+    public async Task Stop()
     {
-        listenForIncomingConnectionsTask.Dispose();
+        Console.WriteLine(listenTask.Status);
+        
+        if (!active)
+            return;
+        
+        cancelTokenSource.Cancel();
+        active = false;
+        await listenTask;
+        Console.WriteLine("Task complete.");
     }
 
+    
     private async Task ListenForIncomingConnections()
     {
-        logger.Log(this, $"Started listening on port: {listenPort}", LogType.Information);
         TcpListener tcpListener = new TcpListener(IPAddress.Any, listenPort);
-        tcpListener.Start();
-        
-        while (true)
+        try
         {
-            var client = await tcpListener.AcceptTcpClientAsync();
-            
-            logger.Log(this, $"Connection request received.", LogType.Information);
+            var token = cancelTokenSource.Token;
+            logger.Log(this, $"Started listening on port: {listenPort}", LogType.Information);
+            tcpListener.Start();
+        
+            while (true)
+            {
+                Console.WriteLine("Waiting for client");
+                var client = await tcpListener.AcceptTcpClientAsync(token);
+                Console.WriteLine("Passed.");
 
-            var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
-            unnamedNetworkPluginClient.AddConnectionToList(connection);
+                logger.Log(this, $"Connection request received.", LogType.Information);
+
+                var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
+                unnamedNetworkPluginClient.AddConnectionToList(connection);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            tcpListener.Stop();
+            Console.WriteLine("Listener task was canceled.");
         }
     }
 }
