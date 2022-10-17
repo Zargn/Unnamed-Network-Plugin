@@ -61,6 +61,22 @@ public class UnnamedNetworkingPluginTests
         Console.WriteLine("Listener triggered");
     }
 
+    private TestPackage? CheckPackage(IPackage receivedPackage, TestPackage baselinePackage, SemaphoreSlim signal)
+    {
+        Console.WriteLine("Package received");
+        if (receivedPackage.Type == baselinePackage.Type)
+        {
+            Console.WriteLine("Package type match");
+            var resultPackage = receivedPackage as TestPackage;
+            signal.Release();
+            return resultPackage;
+        }
+
+        Console.WriteLine("Package received with problems");
+        signal.Release();
+        return null;
+    }
+
 
     // TODO: HAve server and client instead be on the same thread and created in each test, using async instead of threads.
     
@@ -157,49 +173,27 @@ public class UnnamedNetworkingPluginTests
     public async Task PackageCanBeTransmitted()
     {
         var sender = GetClient(25568);
-        // var receiver = GetClient();
 
         TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
 
-        bool success = false;
-
+        TestPackage? resultPackage = null;
+        
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
         sender.PackageReceived += (o, args) =>
-        {
-            Console.WriteLine("Package received");
-            var receivedPackage = args.ReceivedPackage;
-            if (receivedPackage.Type == package.Type)
-            {
-                Console.WriteLine("Package type match");
-                Console.WriteLine(receivedPackage);
-
-                var resultPackage = receivedPackage as TestPackage;
-                Console.WriteLine(package.TestData);
-                Console.WriteLine(resultPackage.TestData);
-                
-                if (Equals(resultPackage.TestData, package.TestData))
-                {
-                    Console.WriteLine("Package contents match");
-                    success = true;
-                    signal.Release();
-                    return;
-                }
-            }
-
-            success = false;
-            Console.WriteLine("Package received with problems");
-            signal.Release();
+        { 
+            resultPackage = CheckPackage(args.ReceivedPackage, package, signal);
         };
 
         var timeout = Timeout();
         var listener = Listener(signal);
 
         await sender.AddConnection(IPAddress.Loopback, 25568);
-        // sender.SendPackage(package, IPAddress.Loopback);
         await sender.SendPackageToAllConnections(package);
 
         Task.WaitAny(timeout, listener);
-        Assert.IsTrue(success);
+        
+        Assert.That(resultPackage, !Is.EqualTo(null));
+        Assert.That(resultPackage.TestData, Is.EqualTo(package.TestData));
     }
     
     // [Test]
