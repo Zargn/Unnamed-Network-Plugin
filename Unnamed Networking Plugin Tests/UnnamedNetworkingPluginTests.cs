@@ -40,7 +40,7 @@ public class UnnamedNetworkingPluginTests
         await signal.WaitAsync();
         Console.WriteLine("Listener triggered");
     }
-    
+
     /// <summary>
     /// Listener task. Completes once all of the provided SemaphoreSlim objects are released.
     /// </summary>
@@ -52,6 +52,7 @@ public class UnnamedNetworkingPluginTests
         {
             await signal.WaitAsync();
         }
+
         Console.WriteLine("Listener triggered");
     }
 
@@ -62,7 +63,8 @@ public class UnnamedNetworkingPluginTests
     /// <param name="baselinePackage"></param>
     /// <param name="signal">Signal to release once complete.</param>
     /// <returns>The received package if type match, otherwise null.</returns>
-    private static TestPackage? CheckPackage(IPackage receivedPackage, TestPackage baselinePackage, SemaphoreSlim signal)
+    private static TestPackage? CheckPackage(IPackage receivedPackage, TestPackage baselinePackage,
+        SemaphoreSlim signal)
     {
         Console.WriteLine("Package received");
         if (receivedPackage.Type == baselinePackage.Type)
@@ -79,9 +81,35 @@ public class UnnamedNetworkingPluginTests
     }
 
 
+    [SetUp]
+    public void Prepare()
+    {
+        mainClient = GetClient(25565);
+        receiveClient25566 = GetClient(25566);
+        receiveClient25567 = GetClient(25567);
+        receiveClient25568 = GetClient(25568);
+        receiveClient25569 = GetClient(25569);
+    }
+
+    [TearDown]
+    public void Cleanup()
+    {
+        var stopTask1 = mainClient.StopListener();
+        var stopTask2 = receiveClient25566.StopListener();
+        var stopTask3 = receiveClient25567.StopListener();
+        var stopTask4 = receiveClient25568.StopListener();
+        var stopTask5 = receiveClient25569.StopListener();
+        Task.WaitAll(stopTask1, stopTask2, stopTask3, stopTask4, stopTask5);
+        // await Timeout();
+    }
+
+    private UnnamedNetworkPluginClient mainClient;
+    private UnnamedNetworkPluginClient receiveClient25566;
+    private UnnamedNetworkPluginClient receiveClient25567;
+    private UnnamedNetworkPluginClient receiveClient25568;
+    private UnnamedNetworkPluginClient receiveClient25569;
     
-    
-    
+
     // #################################################################################################################
     // ## Tests ########################################################################################################
     // #################################################################################################################
@@ -89,32 +117,21 @@ public class UnnamedNetworkingPluginTests
     [Test]
     public async Task ClientReportsSuccessfulOutgoingConnection()
     {
-        var client = GetClient();
-        Console.WriteLine("Got client");
-        var connectionResult = client.AddConnection(IPAddress.Loopback, 25565);
-        await connectionResult;
-        Assert.IsTrue(connectionResult.Result);
+        Assert.IsTrue(await mainClient.AddConnection(IPAddress.Loopback, 25566));
     }
     
     [Test]
     public async Task ClientReportsUnsuccessfulOutgoingConnection()
     {
-        var client = GetClient(25566);
-        Console.WriteLine("Got client");
-        var connectionResult = client.AddConnection(IPAddress.Loopback, 0);
-        await connectionResult;
-        Assert.IsFalse(connectionResult.Result);
+        Assert.IsFalse(await mainClient.AddConnection(IPAddress.Loopback, 0));
     }
 
     [Test]
     public void ClientReportsSuccessfulIncomingConnection()
     {
-        // Create instance
-        var client = GetClient(25567);
-
         // Listener
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-        client.ConnectionSuccessful += (sender, args) =>
+        receiveClient25566.ConnectionSuccessful += (sender, args) =>
         {
             Console.WriteLine("Received connection event triggered");
             signal.Release();
@@ -124,7 +141,7 @@ public class UnnamedNetworkingPluginTests
         var listener = Listener(signal);
     
         // Create connection
-        client.AddConnection(IPAddress.Loopback, 25567);
+        mainClient.AddConnection(IPAddress.Loopback, 25566);
     
         // Await and test result.
         Task.WaitAny(timeout, listener);
@@ -132,21 +149,42 @@ public class UnnamedNetworkingPluginTests
     }
 
     [Test]
+    public async Task PackageCanBeTransmitted()
+    {
+        TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
+
+        TestPackage? resultPackage = null;
+        
+        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
+        receiveClient25566.PackageReceived += (o, args) =>
+        { 
+            resultPackage = CheckPackage(args.ReceivedPackage, package, signal);
+        };
+
+        var timeout = Timeout();
+        var listener = Listener(signal);
+
+        await mainClient.AddConnection(IPAddress.Loopback, 25566);
+        await mainClient.SendPackageToAllConnections(package);
+
+        Task.WaitAny(timeout, listener);
+        
+        Assert.That(resultPackage, !Is.EqualTo(null));
+        Assert.That(resultPackage.TestData, Is.EqualTo(package.TestData));
+    }
+    
+    [Test]
     public void ClientCanConnectToMultipleClients()
     {
-        var client = GetClient(25569);
-        var client1 = GetClient(25570);
-        var client2 = GetClient(25571);
-        
         // Listeners:
         var signal1 = new SemaphoreSlim(0, 1);
         var signal2 = new SemaphoreSlim(0, 1);
-        client1.ConnectionSuccessful += (sender, args) =>
+        receiveClient25566.ConnectionSuccessful += (_, _) =>
         {
             Console.WriteLine("Client1 connection event triggered");
             signal1.Release();
         };
-        client2.ConnectionSuccessful += (sender, args) =>
+        receiveClient25567.ConnectionSuccessful += (_, _) =>
         {
             Console.WriteLine("Client2 connection event triggered");
             signal2.Release();
@@ -156,37 +194,10 @@ public class UnnamedNetworkingPluginTests
         var listener = Listener(new[] {signal1, signal2});
 
         // Create connections
-        client.AddConnection(IPAddress.Loopback, 25570);
-        client.AddConnection(IPAddress.Loopback, 25571);
+        mainClient.AddConnection(IPAddress.Loopback, 25566);
+        mainClient.AddConnection(IPAddress.Loopback, 25567);
 
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
-    }
-
-    [Test]
-    public async Task PackageCanBeTransmitted()
-    {
-        var sender = GetClient(25568);
-
-        TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
-
-        TestPackage? resultPackage = null;
-        
-        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-        sender.PackageReceived += (o, args) =>
-        { 
-            resultPackage = CheckPackage(args.ReceivedPackage, package, signal);
-        };
-
-        var timeout = Timeout();
-        var listener = Listener(signal);
-
-        await sender.AddConnection(IPAddress.Loopback, 25568);
-        await sender.SendPackageToAllConnections(package);
-
-        Task.WaitAny(timeout, listener);
-        
-        Assert.That(resultPackage, !Is.EqualTo(null));
-        Assert.That(resultPackage.TestData, Is.EqualTo(package.TestData));
     }
 }
