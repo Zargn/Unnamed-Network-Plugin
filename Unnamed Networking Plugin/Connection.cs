@@ -56,8 +56,6 @@ public class Connection
             return;
         }
 
-        Console.WriteLine(json);
-        
         await streamWriter.WriteLineAsync(json);
         await streamWriter.FlushAsync();
     }
@@ -105,6 +103,7 @@ public class Connection
             catch (Exception e)
             {
                 logger.Log(this, $"And unexpected error has occured: {e}", LogType.Error);
+                // TODO: Should I maybe not throw here? Do I want the entire loop to stop if a invalid JSON is received?
                 throw;
             }
         }
