@@ -7,13 +7,11 @@ namespace Unnamed_Networking_Plugin;
 
 public class Connection
 {
-    // public IPAddress ConnectedIp { get; }
-    // public int ConnectedPort { get; }
     public TcpClient TcpClient { get; }
     public Stream DataStream { get; }
     
     public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
-    // public event EventHandler<> 
+    public event EventHandler<ClientDisconnectedEventArgs>? ClientDisconnected;
 
     private StreamReader streamReader { get; }
     private StreamWriter streamWriter { get; }
@@ -26,24 +24,22 @@ public class Connection
 
     public Connection(TcpClient tcpClient, Stream dataStream, IJsonSerializer jsonSerializer, ILogger logger)
     {
-        // ConnectedIp = connectedIp;
-        // ConnectedPort = connectedPort;
         TcpClient = tcpClient;
         DataStream = dataStream;
         this.jsonSerializer = jsonSerializer;
         this.logger = logger;
+        
         streamReader = new StreamReader(dataStream);
         streamWriter = new StreamWriter(dataStream);
-        logger.Log(this, "Connection created", LogType.Information);
-
         
+        logger.Log(this, "Connection created", LogType.Information);
         
         packageListenerTask = PackageListener();
     }
 
-    public void Destroy()
+    public void Disconnect()
     {
-        packageListenerTask.Dispose();
+        throw new NotImplementedException();
     }
 
     public async Task SendPackage<T>(T package)
@@ -120,4 +116,15 @@ public class PackageReceivedEventArgs
         ReceivedPackage = receivedPackage;
     }
     public IPackage ReceivedPackage { get; }
+}
+
+public class ClientDisconnectedEventArgs
+{
+    public bool RemoteDisconnected;
+    public bool LocalDisconnected => !RemoteDisconnected;
+
+    public ClientDisconnectedEventArgs(bool remoteDisconnected)
+    {
+        RemoteDisconnected = remoteDisconnected;
+    }
 }
