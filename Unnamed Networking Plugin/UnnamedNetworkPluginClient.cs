@@ -14,6 +14,10 @@ public class UnnamedNetworkPluginClient
     private Listener listener;
 
     private Dictionary<int, Connection> Connections = new();
+    
+    public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
+
+    public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 
     public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer)
     {
@@ -59,6 +63,13 @@ public class UnnamedNetworkPluginClient
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
     }
 
+
+
+    public Connection GetConnectionFromList(IPAddress ipAddress)
+    {
+        throw new NotImplementedException();
+    }
+
     public void RemoveConnection(IPAddress connectionIp)
     {
         throw new NotImplementedException();
@@ -77,10 +88,6 @@ public class UnnamedNetworkPluginClient
         var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendPackage(package)).ToArray();
         await Task.WhenAll(sendTasks);
     }
-
-    public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
-
-    public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 }
 
 
