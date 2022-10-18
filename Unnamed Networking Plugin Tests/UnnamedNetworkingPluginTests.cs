@@ -100,7 +100,6 @@ public class UnnamedNetworkingPluginTests
         var stopTask4 = receiveClient25568.StopListener();
         var stopTask5 = receiveClient25569.StopListener();
         Task.WaitAll(stopTask1, stopTask2, stopTask3, stopTask4, stopTask5);
-        // await Timeout();
     }
 
     private UnnamedNetworkPluginClient mainClient;
@@ -109,7 +108,8 @@ public class UnnamedNetworkingPluginTests
     private UnnamedNetworkPluginClient receiveClient25568;
     private UnnamedNetworkPluginClient receiveClient25569;
     
-
+    
+    
     // #################################################################################################################
     // ## Tests ########################################################################################################
     // #################################################################################################################
@@ -172,7 +172,7 @@ public class UnnamedNetworkingPluginTests
         Assert.That(resultPackage, !Is.EqualTo(null));
         Assert.That(resultPackage.TestData, Is.EqualTo(package.TestData));
     }
-    
+
     [Test]
     public void ClientCanConnectToMultipleClients()
     {
@@ -196,6 +196,46 @@ public class UnnamedNetworkingPluginTests
         // Create connections
         mainClient.AddConnection(IPAddress.Loopback, 25566);
         mainClient.AddConnection(IPAddress.Loopback, 25567);
+
+        Task.WaitAny(timeout, listener);
+        Assert.IsTrue(listener.IsCompleted);
+    }
+
+    [Test]
+    public async Task ClientReportsRemoteDisconnect()
+    {
+        await mainClient.AddConnection(IPAddress.Loopback, 25566);
+        
+        var signal1 = new SemaphoreSlim(0, 1);
+        receiveClient25566.GetConnectionFromList(IPAddress.Loopback).ClientDisconnected += (_, _) =>
+        {
+            signal1.Release();
+        };
+
+        var timeout = Timeout();
+        var listener = Listener(signal1);
+        
+        mainClient.GetConnectionFromList(IPAddress.Loopback).Disconnect();
+
+        Task.WaitAny(timeout, listener);
+        Assert.IsTrue(listener.IsCompleted);
+    }
+
+    [Test]
+    public async Task ClientReportsLocalDisconnect()
+    {
+        await mainClient.AddConnection(IPAddress.Loopback, 25566);
+        
+        var signal1 = new SemaphoreSlim(0, 1);
+        mainClient.GetConnectionFromList(IPAddress.Loopback).ClientDisconnected += (_, _) =>
+        {
+            signal1.Release();
+        };
+
+        var timeout = Timeout();
+        var listener = Listener(signal1);
+
+        mainClient.GetConnectionFromList(IPAddress.Loopback).Disconnect();
 
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
