@@ -240,4 +240,33 @@ public class UnnamedNetworkingPluginTests
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
     }
+
+    [Test]
+    public async Task ClientCanSendPackageToSelectedClient()
+    {
+        await mainClient.AddConnection(IPAddress.Loopback, 25566);
+        await mainClient.AddConnection(IPAddress.Loopback, 25567);
+        
+        TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
+
+        TestPackage? resultPackage = null;
+        
+        var signal1 = new SemaphoreSlim(0, 1);
+        var signal2 = new SemaphoreSlim(0, 1);
+
+        receiveClient25566.PackageReceived += (sender, args) =>
+        {
+            resultPackage = CheckPackage(args.ReceivedPackage, package, signal1);
+        };
+        receiveClient25567.PackageReceived += (sender, args) =>
+        {
+            signal2.Release();
+        };
+
+        var timeout = Timeout();
+        var listener1 = Listener(signal1);
+        var listener2 = Listener(signal2);
+        
+        
+    }
 }
