@@ -58,7 +58,7 @@ public class UnnamedNetworkPluginClient
 
     internal void AddConnectionToList(Connection connection)
     {
-        Connections.Add(nextConnectionId++, connection);
+        Connections.Add(connection.ConnectionInformation, connection);
         connection.PackageReceived += (o, args) =>
         {
             PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, IPAddress.Loopback));

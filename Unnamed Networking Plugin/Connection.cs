@@ -12,6 +12,8 @@ public class Connection
     
     public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
     public event EventHandler<ClientDisconnectedEventArgs>? ClientDisconnected;
+    
+    public IConnectionInformation ConnectionInformation { get; private set; }
 
     private StreamReader streamReader { get; }
     private StreamWriter streamWriter { get; }
