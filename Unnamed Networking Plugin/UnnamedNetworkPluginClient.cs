@@ -13,17 +13,20 @@ public class UnnamedNetworkPluginClient
     private int nextConnectionId = 0;
     private Listener listener;
 
-    private Dictionary<int, Connection> Connections = new();
+    private IConnectionInformation connectionInformation;
+
+    private Dictionary<IConnectionInformation, Connection> Connections = new();
     
     public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
 
     public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 
-    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer)
+    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IConnectionInformation connectionInformation)
     {
         this.port = port;
         this.logger = logger;
         this.jsonSerializer = jsonSerializer;
+        this.connectionInformation = connectionInformation;
         listener = new Listener(this, port, logger);
         listener.Start();
     }
@@ -65,17 +68,17 @@ public class UnnamedNetworkPluginClient
 
 
 
-    public Connection GetConnectionFromList(IPAddress ipAddress)
+    public Connection GetConnectionFromList(IConnectionInformation targetConnectionInformation)
     {
         throw new NotImplementedException();
     }
 
-    public void RemoveConnection(IPAddress connectionIp)
+    public void RemoveConnection(IConnectionInformation targetConnectionInformation)
     {
         throw new NotImplementedException();
     }
 
-    public void SendPackage<T>(T package, IPAddress connectionIp)
+    public void SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
     where T : IPackage
     {
         // PackageReceived?.Invoke(this, new PackageReceivedEventArgs(package, IPAddress.Loopback));
