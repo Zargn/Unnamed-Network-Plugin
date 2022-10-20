@@ -16,7 +16,7 @@ public class UnnamedNetworkingPluginTests
     /// <returns>Network client configured for selected port</returns>
     private static UnnamedNetworkPluginClient GetClient(int port = 25565)
     {
-        var networkPlugin = new UnnamedNetworkPluginClient(port, new Logger(), new JsonSerializerAdapter());
+        var networkPlugin = new UnnamedNetworkPluginClient(port, new Logger(), new JsonSerializerAdapter(), new PortIdentifier(port));
         return networkPlugin;
     }
 
@@ -207,7 +207,7 @@ public class UnnamedNetworkingPluginTests
         await mainClient.AddConnection(IPAddress.Loopback, 25566);
         
         var signal1 = new SemaphoreSlim(0, 1);
-        receiveClient25566.GetConnectionFromList(IPAddress.Loopback).ClientDisconnected += (_, _) =>
+        receiveClient25566.GetConnectionFromList(new PortIdentifier(25565)).ClientDisconnected += (_, _) =>
         {
             signal1.Release();
         };
@@ -215,7 +215,7 @@ public class UnnamedNetworkingPluginTests
         var timeout = Timeout();
         var listener = Listener(signal1);
         
-        mainClient.GetConnectionFromList(IPAddress.Loopback).Disconnect();
+        mainClient.GetConnectionFromList(new PortIdentifier(25566)).Disconnect();
 
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
@@ -227,7 +227,7 @@ public class UnnamedNetworkingPluginTests
         await mainClient.AddConnection(IPAddress.Loopback, 25566);
         
         var signal1 = new SemaphoreSlim(0, 1);
-        mainClient.GetConnectionFromList(IPAddress.Loopback).ClientDisconnected += (_, _) =>
+        mainClient.GetConnectionFromList(new PortIdentifier(25566)).ClientDisconnected += (_, _) =>
         {
             signal1.Release();
         };
@@ -235,7 +235,7 @@ public class UnnamedNetworkingPluginTests
         var timeout = Timeout();
         var listener = Listener(signal1);
 
-        mainClient.GetConnectionFromList(IPAddress.Loopback).Disconnect();
+        mainClient.GetConnectionFromList(new PortIdentifier(25566)).Disconnect();
 
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
@@ -267,6 +267,11 @@ public class UnnamedNetworkingPluginTests
         var listener1 = Listener(signal1);
         var listener2 = Listener(signal2);
         
+        mainClient.SendPackage(package, new PortIdentifier(25566));
+
+        Task.WaitAny(timeout, listener1, listener2);
         
+        Assert.IsFalse(listener2.IsCompleted);
+        Assert.IsTrue(listener1.IsCompleted);
     }
 }
