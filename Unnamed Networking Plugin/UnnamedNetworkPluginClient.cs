@@ -8,10 +8,11 @@ public class UnnamedNetworkPluginClient
 {
     internal ILogger logger;
     internal IJsonSerializer jsonSerializer;
-    
+
     private readonly int port;
     private int nextConnectionId = 0;
     private Listener listener;
+    private Type connectionIdentificationType;
 
     private IConnectionInformation connectionInformation;
 
@@ -21,12 +22,13 @@ public class UnnamedNetworkPluginClient
 
     public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 
-    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IConnectionInformation connectionInformation)
+    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IConnectionInformation connectionInformation, Type connectionIdentificationType)
     {
         this.port = port;
         this.logger = logger;
         this.jsonSerializer = jsonSerializer;
         this.connectionInformation = connectionInformation;
+        this.connectionIdentificationType = connectionIdentificationType;
         listener = new Listener(this, port, logger);
         listener.Start();
     }
@@ -51,9 +53,52 @@ public class UnnamedNetworkPluginClient
         }
 
         var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
+
+        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
+        IPackage identificationPackage;
+        
+        connection.PackageReceived += (sender, args) =>
+        {
+            identificationPackage = args.ReceivedPackage;
+            signal.Release();
+        };
+
+        // No need to await this...
+        // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
+        connection.SendPackage(new IdentificationPackage(connectionInformation));
+
+        var timeout = Timeout();
+        var signalListener = SignalListener(signal);
+
+        Task.WaitAny(timeout, signalListener);
+
+        if (signalListener.IsCompleted)
+        {
+            
+            // Todo: Check identification package for validity. If valid, add this connection with identification to list.
+            // Otherwise terminate connection.
+        }
+        
         AddConnectionToList(connection);
 
         return true;
+    }
+
+    /// <summary>
+    /// Timeout task. Completes after the constant delay has passed.
+    /// </summary>
+    private static async Task Timeout()
+    {
+        await Task.Delay(1000);
+    }
+
+    /// <summary>
+    /// Listener task. Completes once the provided SemaphoreSlim gets released.
+    /// </summary>
+    /// <param name="signal">Signal to listen for.</param>
+    private static async Task SignalListener(SemaphoreSlim signal)
+    {
+        await signal.WaitAsync();
     }
 
     internal void AddConnectionToList(Connection connection)
@@ -61,9 +106,9 @@ public class UnnamedNetworkPluginClient
         Connections.Add(connection.ConnectionInformation, connection);
         connection.PackageReceived += (o, args) =>
         {
-            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, IPAddress.Loopback));
+            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, args.PackageType, IPAddress.Loopback));
         };
-        ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(IPAddress.Loopback));
+        ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(connection.ConnectionInformation, connection));
     }
 
 
@@ -99,12 +144,14 @@ public class UnnamedNetworkPluginClient
 /// </summary>
 public class ConnectionReceivedEventArgs
 {
-    public ConnectionReceivedEventArgs(IPAddress connectionIpAddress)
+    public ConnectionReceivedEventArgs(IConnectionInformation connectionInformation, Connection connection)
     {
-        ConnectionIpAddress = connectionIpAddress;
+        ConnectionInformation = connectionInformation;
+        Connection = connection;
     }
     
-    public IPAddress ConnectionIpAddress { get; }
+    public IConnectionInformation ConnectionInformation { get; }
+    public Connection Connection { get; }
 }
 
 /// <summary>
@@ -112,7 +159,7 @@ public class ConnectionReceivedEventArgs
 /// </summary>
 public class PackageReceivedEventDetailedArgs : PackageReceivedEventArgs
 {
-    public PackageReceivedEventDetailedArgs(IPackage receivedPackage, IPAddress senderIpAddress) : base(receivedPackage)
+    public PackageReceivedEventDetailedArgs(IPackage receivedPackage, Type packageType, IPAddress senderIpAddress) : base(receivedPackage, packageType)
     {
         SenderIpAddress = senderIpAddress;
     }
