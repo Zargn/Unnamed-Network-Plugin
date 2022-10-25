@@ -14,7 +14,7 @@ public class UnnamedNetworkPluginClient
     private Listener listener;
     private Type connectionIdentificationType;
 
-    private IConnectionInformation connectionInformation;
+    public IdentificationPackage identificationPackage { get; private set; }
 
     private Dictionary<IConnectionInformation, Connection> Connections = new();
     
@@ -22,13 +22,14 @@ public class UnnamedNetworkPluginClient
 
     public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 
-    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IConnectionInformation connectionInformation, Type connectionIdentificationType)
+    public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IdentificationPackage identificationPackage)
     {
         this.port = port;
         this.logger = logger;
         this.jsonSerializer = jsonSerializer;
-        this.connectionInformation = connectionInformation;
-        this.connectionIdentificationType = connectionIdentificationType;
+        this.identificationPackage = identificationPackage;
+        
+        connectionIdentificationType = identificationPackage.GetType();
         listener = new Listener(this, port, logger);
         listener.Start();
     }
@@ -55,33 +56,53 @@ public class UnnamedNetworkPluginClient
         var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
 
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-        IPackage identificationPackage;
+        IdentificationPackage? remoteIdentificationPackage = null;
         
         connection.PackageReceived += (sender, args) =>
         {
-            identificationPackage = args.ReceivedPackage;
+            remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
             signal.Release();
         };
-
-        // No need to await this...
-        // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
-        connection.SendPackage(new IdentificationPackage(connectionInformation));
-
+        
         var timeout = Timeout();
         var signalListener = SignalListener(signal);
 
+        // No need to await this...
+        // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
+        connection.SendPackage(identificationPackage);
+
         Task.WaitAny(timeout, signalListener);
+        
+        connection.PackageReceived -= (sender, args) =>
+        {
+            remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
+            signal.Release();
+        };
 
         if (signalListener.IsCompleted)
         {
-            
-            // Todo: Check identification package for validity. If valid, add this connection with identification to list.
-            // Otherwise terminate connection.
+            if (remoteIdentificationPackage == null)
+            {
+                logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
+                return false;
+            }
+
+            var remoteInformation = remoteIdentificationPackage.ExtractConnectionInformation();
+
+            if (remoteInformation == null)
+            {
+                logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
+                return false;
+            }
+
+            logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
+            connection.ConnectionInformation = remoteInformation;
+            AddConnectionToList(connection);
+            return true;
         }
         
-        AddConnectionToList(connection);
-
-        return true;
+        logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
+        return false;
     }
 
     /// <summary>

@@ -63,12 +63,81 @@ public class Listener
                 logger.Log(this, $"Connection request received.", LogType.Information);
 
                 var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
-                unnamedNetworkPluginClient.AddConnectionToList(connection);
+                
+                
+                
+                
+                
+                SemaphoreSlim signal = new SemaphoreSlim(0, 1);
+                IdentificationPackage? remoteIdentificationPackage = null;
+        
+                connection.PackageReceived += (sender, args) =>
+                {
+                    remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
+                    signal.Release();
+                };
+
+                var timeout = Timeout();
+                var signalListener = SignalListener(signal);
+                
+                // No need to await this...
+                // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
+                connection.SendPackage(unnamedNetworkPluginClient.identificationPackage);
+                
+                Task.WaitAny(new Task[] {timeout, signalListener}, token);
+                
+                // connection.PackageReceived -= (sender, args) =>
+                // {
+                //     remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
+                //     signal.Release();
+                // };
+
+                if (signalListener.IsCompleted)
+                {
+                    if (remoteIdentificationPackage == null)
+                    {
+                        logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
+                        return;
+                    }
+
+                    var remoteInformation = remoteIdentificationPackage.ExtractConnectionInformation();
+
+                    if (remoteInformation == null)
+                    {
+                        logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
+                        return;
+                    }
+
+                    logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
+                    connection.ConnectionInformation = remoteInformation;
+                    unnamedNetworkPluginClient.AddConnectionToList(connection);
+                    return;
+                }
+        
+                logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
             }
         }
         catch (OperationCanceledException)
         {
+            Console.WriteLine("Listener stopped");
             tcpListener.Stop();
         }
+    }
+    
+    /// <summary>
+    /// Timeout task. Completes after the constant delay has passed.
+    /// </summary>
+    private static async Task Timeout()
+    {
+        await Task.Delay(1000);
+    }
+
+    /// <summary>
+    /// Listener task. Completes once the provided SemaphoreSlim gets released.
+    /// </summary>
+    /// <param name="signal">Signal to listen for.</param>
+    private static async Task SignalListener(SemaphoreSlim signal)
+    {
+        await signal.WaitAsync();
     }
 }

@@ -2,12 +2,7 @@
 
 namespace Unnamed_Networking_Plugin;
 
-public class IdentificationPackage : Package
+public abstract class IdentificationPackage : Package
 {
-    public IConnectionInformation ConnectionInformation;
-
-    public IdentificationPackage(IConnectionInformation connectionInformation)
-    {
-        ConnectionInformation = connectionInformation;
-    }
+    public abstract IConnectionInformation? ExtractConnectionInformation();
 }

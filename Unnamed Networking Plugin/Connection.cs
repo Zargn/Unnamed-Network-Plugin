@@ -47,7 +47,7 @@ public class Connection
     public async Task SendPackage<T>(T package)
     where T : IPackage
     {
-        var json = jsonSerializer.Serialize<T>(package);
+        var json = jsonSerializer.Serialize(package, package.GetType());
         if (json == null)
         {
             logger.Log(this, "Result Json was null", LogType.Warning);
@@ -58,6 +58,7 @@ public class Connection
         await streamWriter.FlushAsync();
     }
 
+    // TODO: Does this task need cancellation?
     public async Task PackageListener()
     { 
         logger.Log(this, "PackageListener started", LogType.Information);

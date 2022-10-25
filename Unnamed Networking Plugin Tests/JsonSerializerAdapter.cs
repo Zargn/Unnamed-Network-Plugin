@@ -9,7 +9,12 @@ public class JsonSerializerAdapter : IJsonSerializer
 
     public string? Serialize<T>(T serializableClass)
     {
-        return JsonSerializer.Serialize(serializableClass, options);
+        return JsonSerializer.Serialize<T>(serializableClass, options);
+    }
+
+    public string? Serialize(object? serializableClass, Type type)
+    {
+        return JsonSerializer.Serialize(serializableClass, type, options);
     }
 
     public T? DeSerialize<T>(string json)

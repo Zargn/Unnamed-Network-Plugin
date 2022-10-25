@@ -16,7 +16,7 @@ public class UnnamedNetworkingPluginTests
     /// <returns>Network client configured for selected port</returns>
     private static UnnamedNetworkPluginClient GetClient(int port = 25565)
     {
-        var networkPlugin = new UnnamedNetworkPluginClient(port, new Logger(), new JsonSerializerAdapter(), new PortIdentifier(port));
+        var networkPlugin = new UnnamedNetworkPluginClient(port, new Logger(), new JsonSerializerAdapter(), new PortIdentifierPackage(new PortIdentifier(port)));
         return networkPlugin;
     }
 
@@ -100,6 +100,7 @@ public class UnnamedNetworkingPluginTests
         var stopTask4 = receiveClient25568.StopListener();
         var stopTask5 = receiveClient25569.StopListener();
         Task.WaitAll(stopTask1, stopTask2, stopTask3, stopTask4, stopTask5);
+        Console.WriteLine("Finished cleanup.");
     }
 
     private UnnamedNetworkPluginClient mainClient;
@@ -152,7 +153,7 @@ public class UnnamedNetworkingPluginTests
     public async Task PackageCanBeTransmitted()
     {
         TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
-
+    
         TestPackage? resultPackage = null;
         
         SemaphoreSlim signal = new SemaphoreSlim(0, 1);
@@ -160,13 +161,13 @@ public class UnnamedNetworkingPluginTests
         { 
             resultPackage = CheckPackage(args.ReceivedPackage, package, signal);
         };
-
+    
         var timeout = Timeout();
         var listener = Listener(signal);
-
+    
         await mainClient.AddConnection(IPAddress.Loopback, 25566);
         await mainClient.SendPackageToAllConnections(package);
-
+    
         Task.WaitAny(timeout, listener);
         
         Assert.That(resultPackage, !Is.EqualTo(null));
@@ -189,14 +190,14 @@ public class UnnamedNetworkingPluginTests
             Console.WriteLine("Client2 connection event triggered");
             signal2.Release();
         };
-
+    
         var timeout = Timeout();
         var listener = Listener(new[] {signal1, signal2});
-
+    
         // Create connections
         mainClient.AddConnection(IPAddress.Loopback, 25566);
         mainClient.AddConnection(IPAddress.Loopback, 25567);
-
+    
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
     }
@@ -211,16 +212,16 @@ public class UnnamedNetworkingPluginTests
         {
             signal1.Release();
         };
-
+    
         var timeout = Timeout();
         var listener = Listener(signal1);
         
         mainClient.GetConnectionFromList(new PortIdentifier(25566)).Disconnect();
-
+    
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
     }
-
+    
     [Test]
     public async Task ClientReportsLocalDisconnect()
     {
@@ -231,16 +232,16 @@ public class UnnamedNetworkingPluginTests
         {
             signal1.Release();
         };
-
+    
         var timeout = Timeout();
         var listener = Listener(signal1);
-
+    
         mainClient.GetConnectionFromList(new PortIdentifier(25566)).Disconnect();
-
+    
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
     }
-
+    
     [Test]
     public async Task ClientCanSendPackageToSelectedClient()
     {
@@ -248,12 +249,12 @@ public class UnnamedNetworkingPluginTests
         await mainClient.AddConnection(IPAddress.Loopback, 25567);
         
         TestPackage package = new TestPackage(new TestData("Test Package", 42, 3.13f));
-
+    
         TestPackage? resultPackage = null;
         
         var signal1 = new SemaphoreSlim(0, 1);
         var signal2 = new SemaphoreSlim(0, 1);
-
+    
         receiveClient25566.PackageReceived += (sender, args) =>
         {
             resultPackage = CheckPackage(args.ReceivedPackage, package, signal1);
@@ -262,13 +263,13 @@ public class UnnamedNetworkingPluginTests
         {
             signal2.Release();
         };
-
+    
         var timeout = Timeout();
         var listener1 = Listener(signal1);
         var listener2 = Listener(signal2);
         
         mainClient.SendPackage(package, new PortIdentifier(25566));
-
+    
         Task.WaitAny(timeout, listener1, listener2);
         
         Assert.IsFalse(listener2.IsCompleted);
