@@ -97,7 +97,7 @@ public class Listener
                     if (remoteIdentificationPackage == null)
                     {
                         logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
-                        return;
+                        continue;
                     }
 
                     var remoteInformation = remoteIdentificationPackage.ExtractConnectionInformation();
@@ -105,13 +105,13 @@ public class Listener
                     if (remoteInformation == null)
                     {
                         logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
-                        return;
+                        continue;
                     }
 
                     logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
                     connection.ConnectionInformation = remoteInformation;
                     unnamedNetworkPluginClient.AddConnectionToList(connection);
-                    return;
+                    continue;
                 }
         
                 logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
@@ -119,7 +119,7 @@ public class Listener
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine("Listener stopped");
+            logger.Log(this, "Listener stopped.", LogType.Information);
             tcpListener.Stop();
         }
     }
