@@ -145,11 +145,11 @@ public class UnnamedNetworkPluginClient
         throw new NotImplementedException();
     }
 
-    public void SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
-    where T : IPackage
+    public async Task SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
+        where T : IPackage
     {
+        await Connections[targetConnectionInformation].SendPackage(package);
         // PackageReceived?.Invoke(this, new PackageReceivedEventArgs(package, IPAddress.Loopback));
-        throw new NotImplementedException();
     }
 
     public async Task SendPackageToAllConnections<T>(T package)
