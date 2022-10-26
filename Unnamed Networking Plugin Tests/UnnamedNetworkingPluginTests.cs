@@ -142,8 +142,8 @@ public class UnnamedNetworkingPluginTests
         var listener = Listener(signal);
     
         // Create connection
-        mainClient.AddConnection(IPAddress.Loopback, 25566);
-    
+        var addConnection = mainClient.AddConnection(IPAddress.Loopback, 25566);
+
         // Await and test result.
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
@@ -195,8 +195,8 @@ public class UnnamedNetworkingPluginTests
         var listener = Listener(new[] {signal1, signal2});
     
         // Create connections
-        mainClient.AddConnection(IPAddress.Loopback, 25566);
-        mainClient.AddConnection(IPAddress.Loopback, 25567);
+        var addConnection25566 = mainClient.AddConnection(IPAddress.Loopback, 25566);
+        var addConnection25567 = mainClient.AddConnection(IPAddress.Loopback, 25567);
     
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
@@ -268,7 +268,7 @@ public class UnnamedNetworkingPluginTests
         var listener1 = Listener(signal1);
         var listener2 = Listener(signal2);
         
-        mainClient.SendPackage(package, new PortIdentifier(25566));
+        await mainClient.SendPackage(package, new PortIdentifier(25566));
     
         Task.WaitAny(timeout, listener1, listener2);
         
