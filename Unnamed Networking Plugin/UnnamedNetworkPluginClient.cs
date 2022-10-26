@@ -55,17 +55,13 @@ public class UnnamedNetworkPluginClient
 
         var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
 
-        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-        IdentificationPackage? remoteIdentificationPackage = null;
-        
-        connection.PackageReceived += (sender, args) =>
-        {
-            remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
-            signal.Release();
-        };
+        temporarySignal = new SemaphoreSlim(0, 1);
+        temporaryRemoteIdentificationPackage = null;
+
+        connection.PackageReceived += GatherIdentificationPackage;
         
         var timeout = Timeout();
-        var signalListener = SignalListener(signal);
+        var signalListener = SignalListener(temporarySignal);
 
         // No need to await this...
         // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
@@ -73,21 +69,17 @@ public class UnnamedNetworkPluginClient
 
         Task.WaitAny(timeout, signalListener);
         
-        connection.PackageReceived -= (sender, args) =>
-        {
-            remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
-            signal.Release();
-        };
-
+        connection.PackageReceived -= GatherIdentificationPackage;
+        
         if (signalListener.IsCompleted)
         {
-            if (remoteIdentificationPackage == null)
+            if (temporaryRemoteIdentificationPackage == null)
             {
                 logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
                 return false;
             }
 
-            var remoteInformation = remoteIdentificationPackage.ExtractConnectionInformation();
+            var remoteInformation = temporaryRemoteIdentificationPackage.ExtractConnectionInformation();
 
             if (remoteInformation == null)
             {
@@ -103,6 +95,15 @@ public class UnnamedNetworkPluginClient
         
         logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
         return false;
+    }
+    
+    private SemaphoreSlim temporarySignal;
+    private IdentificationPackage? temporaryRemoteIdentificationPackage;
+    
+    private void GatherIdentificationPackage(object? sender, PackageReceivedEventArgs args)
+    {
+        temporaryRemoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
+        temporarySignal.Release();
     }
 
     /// <summary>

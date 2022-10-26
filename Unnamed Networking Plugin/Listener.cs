@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Loader;
 using System.Threading.Channels;
 using Unnamed_Networking_Plugin.Interfaces;
 
@@ -63,44 +64,36 @@ public class Listener
                 logger.Log(this, $"Connection request received.", LogType.Information);
 
                 var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
+
+
+
                 
-                
-                
-                
-                
-                SemaphoreSlim signal = new SemaphoreSlim(0, 1);
-                IdentificationPackage? remoteIdentificationPackage = null;
-        
-                connection.PackageReceived += (sender, args) =>
-                {
-                    remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
-                    signal.Release();
-                };
+                // Todo: Might be better to just reset the signal instead of creating a new instance.
+                temporarySignal = new SemaphoreSlim(0, 1);
+                temporaryRemoteIdentificationPackage = null;
+
+                connection.PackageReceived += GatherIdentificationPackage;
 
                 var timeout = Timeout();
-                var signalListener = SignalListener(signal);
+                var signalListener = SignalListener(temporarySignal);
                 
                 // No need to await this...
                 // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
                 connection.SendPackage(unnamedNetworkPluginClient.identificationPackage);
                 
                 Task.WaitAny(new Task[] {timeout, signalListener}, token);
-                
-                // connection.PackageReceived -= (sender, args) =>
-                // {
-                //     remoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
-                //     signal.Release();
-                // };
 
+                connection.PackageReceived -= GatherIdentificationPackage;
+                
                 if (signalListener.IsCompleted)
                 {
-                    if (remoteIdentificationPackage == null)
+                    if (temporaryRemoteIdentificationPackage == null)
                     {
                         logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
                         continue;
                     }
 
-                    var remoteInformation = remoteIdentificationPackage.ExtractConnectionInformation();
+                    var remoteInformation = temporaryRemoteIdentificationPackage.ExtractConnectionInformation();
 
                     if (remoteInformation == null)
                     {
@@ -123,6 +116,15 @@ public class Listener
             tcpListener.Stop();
         }
     }
+
+    private SemaphoreSlim temporarySignal;
+    private IdentificationPackage? temporaryRemoteIdentificationPackage;
+    
+    private void GatherIdentificationPackage(object? sender, PackageReceivedEventArgs args)
+    {
+        temporaryRemoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
+        temporarySignal.Release();
+    }
     
     /// <summary>
     /// Timeout task. Completes after the constant delay has passed.
@@ -139,5 +141,10 @@ public class Listener
     private static async Task SignalListener(SemaphoreSlim signal)
     {
         await signal.WaitAsync();
+    }
+
+    public override string ToString()
+    {
+        return $"{base.ToString()}:{unnamedNetworkPluginClient.identificationPackage.ExtractConnectionInformation()}";
     }
 }
