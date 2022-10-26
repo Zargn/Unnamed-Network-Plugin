@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Threading.Channels;
+﻿using System.Net.Sockets;
 using Unnamed_Networking_Plugin.Interfaces;
 
 namespace Unnamed_Networking_Plugin;
@@ -13,8 +11,11 @@ public class Connection
     public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
     public event EventHandler<ClientDisconnectedEventArgs>? ClientDisconnected;
     
+    
+    // TODO: This property should probably be moved out of this class since it is only useful if you use the full app.
     public IConnectionInformation ConnectionInformation { get; set; }
 
+    
     private StreamReader streamReader { get; }
     private StreamWriter streamWriter { get; }
 
