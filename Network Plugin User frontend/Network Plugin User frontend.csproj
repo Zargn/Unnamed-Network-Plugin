@@ -12,4 +12,8 @@
       <ProjectReference Include="..\Unnamed Networking Plugin\Unnamed Networking Plugin.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="SimpleConsoleHelpers" Version="1.0.0" />
+    </ItemGroup>
+
 </Project>
