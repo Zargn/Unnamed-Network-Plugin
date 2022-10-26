@@ -1,4 +1,5 @@
 using System.Net;
+using System.Runtime.Loader;
 using NUnit.Framework.Internal.Execution;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Interfaces;
@@ -206,10 +207,12 @@ public class UnnamedNetworkingPluginTests
     public async Task ClientReportsRemoteDisconnect()
     {
         await mainClient.AddConnection(IPAddress.Loopback, 25566);
-        
+
+        bool localDisconnect = true;
         var signal1 = new SemaphoreSlim(0, 1);
-        receiveClient25566.GetConnectionFromList(new PortIdentifier(25565)).ClientDisconnected += (_, _) =>
+        receiveClient25566.GetConnectionFromList(new PortIdentifier(25565)).ClientDisconnected += (_, args) =>
         {
+            localDisconnect = args.LocalDisconnected;
             signal1.Release();
         };
     
@@ -220,6 +223,7 @@ public class UnnamedNetworkingPluginTests
     
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
+        Assert.IsFalse(localDisconnect);
     }
     
     [Test]
@@ -227,9 +231,11 @@ public class UnnamedNetworkingPluginTests
     {
         await mainClient.AddConnection(IPAddress.Loopback, 25566);
         
+        bool localDisconnect = false;
         var signal1 = new SemaphoreSlim(0, 1);
-        mainClient.GetConnectionFromList(new PortIdentifier(25566)).ClientDisconnected += (_, _) =>
+        mainClient.GetConnectionFromList(new PortIdentifier(25566)).ClientDisconnected += (_, args) =>
         {
+            localDisconnect = args.LocalDisconnected;
             signal1.Release();
         };
     
@@ -240,6 +246,7 @@ public class UnnamedNetworkingPluginTests
     
         Task.WaitAny(timeout, listener);
         Assert.IsTrue(listener.IsCompleted);
+        Assert.IsTrue(localDisconnect);
     }
     
     [Test]
