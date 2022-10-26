@@ -24,6 +24,8 @@ public class Connection
 
     private Task packageListenerTask;
 
+    private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
 
     public Connection(TcpClient tcpClient, Stream dataStream, IJsonSerializer jsonSerializer, ILogger logger)
     {
@@ -40,9 +42,16 @@ public class Connection
         packageListenerTask = PackageListener();
     }
 
-    public void Disconnect()
+    public async Task Disconnect()
     {
-        throw new NotImplementedException();
+        // cancellationTokenSource.Cancel();
+        // streamReader.Close();
+        TcpClient.Close();
+        ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(false));
+
+        // throw new NotImplementedException();
+        // TcpClient.Close();
+        // streamWriter.Close();
     }
 
     public async Task SendPackage<T>(T package)
@@ -67,11 +76,14 @@ public class Connection
         {
             try
             {
+                // cancellationTokenSource.Token.ThrowIfCancellationRequested();
                 var json = await streamReader.ReadLineAsync();
                 if (json == null)
                 {
-                    logger.Log(this, $"Received json was null", LogType.HandledError);
-                    continue;
+                    logger.Log(this, $"Received json was null, disconnecting...", LogType.HandledError);
+                    ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(true));
+                    TcpClient.Close();
+                    return;
                 }
 
                 var package = jsonSerializer.DeSerialize<Package>(json);
@@ -94,12 +106,19 @@ public class Connection
                 var resultPackage = jsonSerializer.Deserialize(json, objectType) as Package;
                 if (resultPackage == null)
                 {
-                    logger.Log(this, $"Result Package was null. This should not happen, is something wrong with your IJsonSerializer class?", LogType.Warning);
+                    logger.Log(this,
+                        $"Result Package was null. This should not happen, is something wrong with your IJsonSerializer class?",
+                        LogType.Warning);
                     continue;
                 }
-                
+
                 PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage, objectType));
             }
+            // catch (OperationCanceledException)
+            // {
+            //     logger.Log(this, $"Connection disconnected", LogType.Information);
+            //     return;
+            // }
             catch (Exception e)
             {
                 logger.Log(this, $"And unexpected error has occured: {e}", LogType.Error);

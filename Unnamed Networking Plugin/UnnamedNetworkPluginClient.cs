@@ -137,12 +137,12 @@ public class UnnamedNetworkPluginClient
 
     public Connection GetConnectionFromList(IConnectionInformation targetConnectionInformation)
     {
-        throw new NotImplementedException();
+        return Connections[targetConnectionInformation];
     }
 
     public void RemoveConnection(IConnectionInformation targetConnectionInformation)
     {
-        throw new NotImplementedException();
+        Connections[targetConnectionInformation].Disconnect();
     }
 
     public async Task SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
