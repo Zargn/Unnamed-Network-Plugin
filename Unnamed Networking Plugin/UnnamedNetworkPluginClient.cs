@@ -134,6 +134,7 @@ public class UnnamedNetworkPluginClient
         };
         connection.ClientDisconnected += (o, args) =>
         {
+            Connections.Remove(connection.ConnectionInformation);
             ConnectionLost?.Invoke(o, new ClientDisconnectedEventDetailedArgs(args.RemoteDisconnected, connection.ConnectionInformation));
         };
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(connection.ConnectionInformation, connection));
