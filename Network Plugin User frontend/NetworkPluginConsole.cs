@@ -1,28 +1,52 @@
-﻿namespace Network_Plugin_User_frontend;
+﻿using System.Net;
+using ConsoleUtilities;
+using Unnamed_Networking_Plugin;
+
+namespace Network_Plugin_User_frontend;
 
 public static class Initializer
 {
-    public static void Main()
+    public static async Task Main()
     {
-        NetworkPluginConsole networkPluginConsole = new();
-        networkPluginConsole.Run();
+        string? name = SimpleConsoleHelpers.RequestStringInput("Please enter your name: ");
+        NetworkPluginConsole networkPluginConsole = new(name);
+        var client = networkPluginConsole.Run();
+        await client;
     }
 }
 
 public class NetworkPluginConsole
 {
-    public void Run()
+    private UnnamedNetworkPluginClient client;
+    // private UnnamedNetworkPluginClient server = new(25566, new Logger(), new JsonSerializerAdapter(), new PortIdentifier(25566));
+    private NameIdentifier nameIdentifier;
+
+
+    public NetworkPluginConsole(string name)
     {
-        new Thread(ServerThread).Start();
-        MainLoop();
+        nameIdentifier = new NameIdentifier(name);
+        client = new(25565, new Logger(), new JsonSerializerAdapter(), new NameIdentifierPackage(nameIdentifier));
     }
 
-    private void ServerThread()
+    public async Task Run()
     {
-        
+        client.ConnectionSuccessful += (sender, args) =>
+        {
+            Console.WriteLine($"User with name: [{args.ConnectionInformation}] has been connected!");
+        };
+        client.PackageReceived += (sender, args) =>
+        {
+            Console.WriteLine(args.ReceivedPackage);
+        };
+        client.ConnectionLost += (sender, args) =>
+        {
+            Console.WriteLine($"User with name: [{args.ConnectionInformation}] has disconnected.");
+        };
+        await MainLoop();
+        Console.WriteLine("Loop ended.");
     }
-    
-    private void MainLoop()
+
+    private async Task MainLoop()
     {
         while (true)
         {
@@ -30,12 +54,18 @@ public class NetworkPluginConsole
             switch (operation)
             {
                 case Operation.Send:
-                    SendMessage();
                     break;
-                case Operation.Request:
-                    RequestMessages();
+                case Operation.SendAll:
+                    SendMessageToAll();
+                    break;
+                case Operation.Connect:
+                    await Connect();
+                    break;
+                case Operation.Disconnect:
+                    Disconnect();
                     break;
                 case Operation.Quit:
+                    Console.WriteLine("Quit.");
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -46,7 +76,9 @@ public class NetworkPluginConsole
     private enum Operation
     {
         Send,
-        Request,
+        SendAll,
+        Connect,
+        Disconnect,
         Quit
     }
 
@@ -54,7 +86,7 @@ public class NetworkPluginConsole
     {
         while (true)
         {
-            Console.WriteLine("[Q] = quit, [S] = send message, [R] = request list of sent messages");
+            Console.WriteLine("[Q] = quit, [S] = send message, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client.");
             var inputString = Console.ReadLine();
             switch (inputString.ToLower())
             {
@@ -62,8 +94,12 @@ public class NetworkPluginConsole
                     return Operation.Quit;
                 case "s":
                     return Operation.Send;
-                case "r":
-                    return Operation.Request;
+                case "sa":
+                    return Operation.SendAll;
+                case "c":
+                    return Operation.Connect;
+                case "d":
+                    return Operation.Disconnect;
                 default:
                     Console.WriteLine("Invalid input. Try again!");
                     break;
@@ -71,15 +107,40 @@ public class NetworkPluginConsole
         }
     }
 
-    private void SendMessage()
+    private void SendMessageToAll()
     {
         Console.WriteLine("Please enter message to send: ");
         var message = Console.ReadLine();
-        throw new NotImplementedException("Sending messages has not yet been implemented!");
+        var task = client.SendPackageToAllConnections(new TextMessagePackage(message, nameIdentifier));
     }
 
-    private void RequestMessages()
+    private async Task Connect()
     {
-        throw new NotImplementedException("Requesting messages from the server has not been implemented yet!");
+        var ipString =SimpleConsoleHelpers.RequestStringInput("Please enter target ip:");
+        IPAddress ip = null;
+        try
+        {
+            ip = IPAddress.Parse(ipString);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Provided ip was invalid.");
+            return;
+        }
+
+        var port = SimpleConsoleHelpers.RequestIntInput("Please enter port:");
+        var connection = client.AddConnection(ip, port);
+        await connection;
+        if (!connection.Result)
+        {
+            Console.WriteLine("Connection was unsuccessful. Please try again.");
+        }
+    }
+
+    private void Disconnect()
+    {
+        var targetConnectionName =
+            SimpleConsoleHelpers.RequestStringInput("Please enter name of client to disconnect.");
+        client.RemoveConnection(new NameIdentifier(targetConnectionName));
     }
 }
