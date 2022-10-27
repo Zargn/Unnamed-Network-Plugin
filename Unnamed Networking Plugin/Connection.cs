@@ -123,7 +123,7 @@ public class Connection
             {
                 logger.Log(this, $"And unexpected error has occured: {e}", LogType.Error);
                 // TODO: Should I maybe not throw here? Do I want the entire loop to stop if a invalid JSON is received?
-                throw;
+                return;
             }
         }
     }
