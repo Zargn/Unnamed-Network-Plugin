@@ -18,8 +18,10 @@ public class UnnamedNetworkPluginClient
     private Type connectionIdentificationType;
     private SemaphoreSlim temporarySignal;
     private IdentificationPackage? temporaryRemoteIdentificationPackage;
-    private Dictionary<IConnectionInformation, Connection> Connections = new();
-    
+    private Dictionary<IConnectionInformation, Connection> connections = new();
+
+    public Dictionary<IConnectionInformation, Connection> Connections => connections;
+
     /// <summary>
     /// The currently configured identification package for this instance.
     /// </summary>

@@ -64,6 +64,9 @@ public class NetworkPluginConsole
                 case Operation.Disconnect:
                     Disconnect();
                     break;
+                case Operation.List:
+                    ListConnections();
+                    break;
                 case Operation.Quit:
                     Console.WriteLine("Quit.");
                     return;
@@ -79,14 +82,15 @@ public class NetworkPluginConsole
         SendAll,
         Connect,
         Disconnect,
-        Quit
+        Quit,
+        List
     }
 
     private Operation GetUserInput()
     {
         while (true)
         {
-            Console.WriteLine("[Q] = quit, [S] = send message, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client.");
+            Console.WriteLine("[Q] = quit, [S] = send message, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client, [L] = list connections.");
             var inputString = Console.ReadLine();
             switch (inputString.ToLower())
             {
@@ -100,6 +104,8 @@ public class NetworkPluginConsole
                     return Operation.Connect;
                 case "d":
                     return Operation.Disconnect;
+                case "l":
+                    return Operation.List;
                 default:
                     Console.WriteLine("Invalid input. Try again!");
                     break;
@@ -142,5 +148,14 @@ public class NetworkPluginConsole
         var targetConnectionName =
             SimpleConsoleHelpers.RequestStringInput("Please enter name of client to disconnect.");
         client.RemoveConnection(new NameIdentifier(targetConnectionName));
+    }
+
+    private void ListConnections()
+    {
+        Console.WriteLine("Connected clients:");
+        foreach (var pair in client.Connections)
+        {
+            Console.WriteLine(pair.Key);
+        }
     }
 }
