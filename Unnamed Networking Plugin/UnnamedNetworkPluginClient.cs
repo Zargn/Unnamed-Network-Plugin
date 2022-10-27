@@ -67,7 +67,7 @@ public class UnnamedNetworkPluginClient
 
         // No need to await this...
         // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
-        connection.SendPackage(identificationPackage);
+       await connection.SendPackage(identificationPackage);
 
         Task.WaitAny(timeout, signalListener);
         
