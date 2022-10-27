@@ -1,7 +1,8 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Interfaces;
-
+using Unnamed_Networking_Plugin.Packages;
 
 
 namespace Unnamed_Networking_Plugin;
@@ -241,45 +242,4 @@ public class UnnamedNetworkPluginClient
         var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendPackage(package)).ToArray();
         await Task.WhenAll(sendTasks);
     }
-}
-
-/// <summary>
-/// Event information for disconnections.
-/// </summary>
-public class ClientDisconnectedEventDetailedArgs : ClientDisconnectedEventArgs
-{
-    public ClientDisconnectedEventDetailedArgs(bool remoteDisconnected, IConnectionInformation connectionInformation) : base(remoteDisconnected)
-    {
-        ConnectionInformation = connectionInformation;
-    }
-
-    public IConnectionInformation ConnectionInformation { get; }
-}
-
-/// <summary>
-/// Event information for successful connections.
-/// </summary>
-public class ConnectionReceivedEventArgs
-{
-    public ConnectionReceivedEventArgs(IConnectionInformation connectionInformation, Connection connection)
-    {
-        ConnectionInformation = connectionInformation;
-        Connection = connection;
-    }
-    
-    public IConnectionInformation ConnectionInformation { get; }
-    public Connection Connection { get; }
-}
-
-/// <summary>
-/// Event information for received packages and their source.
-/// </summary>
-public class PackageReceivedEventDetailedArgs : PackageReceivedEventArgs
-{
-    public PackageReceivedEventDetailedArgs(IPackage receivedPackage, Type packageType, IConnectionInformation connectionInformation) : base(receivedPackage, packageType)
-    {
-        ConnectionInformation = connectionInformation;
-    }
-
-    public IConnectionInformation ConnectionInformation;
 }
