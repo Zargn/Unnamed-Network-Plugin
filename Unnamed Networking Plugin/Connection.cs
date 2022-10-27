@@ -42,7 +42,7 @@ public class Connection
         packageListenerTask = PackageListener();
     }
 
-    public async Task Disconnect()
+    public void Disconnect()
     {
         // cancellationTokenSource.Cancel();
         // streamReader.Close();
@@ -69,14 +69,13 @@ public class Connection
     }
 
     // TODO: Does this task need cancellation?
-    public async Task PackageListener()
+    private async Task PackageListener()
     { 
         logger.Log(this, "PackageListener started", LogType.Information);
         while (true)
         {
             try
             {
-                // cancellationTokenSource.Token.ThrowIfCancellationRequested();
                 var json = await streamReader.ReadLineAsync();
                 if (json == null)
                 {
@@ -114,16 +113,15 @@ public class Connection
 
                 PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage, objectType));
             }
-            // catch (OperationCanceledException)
-            // {
-            //     logger.Log(this, $"Connection disconnected", LogType.Information);
-            //     return;
-            // }
+            catch (IOException)
+            {
+                logger.Log(this, $"Client {ConnectionInformation} lost connection.", LogType.Information);
+                return;
+            }
             catch (Exception e)
             {
-                logger.Log(this, $"And unexpected error has occured: {e}", LogType.Error);
-                // TODO: Should I maybe not throw here? Do I want the entire loop to stop if a invalid JSON is received?
-                return;
+                logger.Log(this, $"An unexpected error has occured: {e}", LogType.Error);
+                throw;
             }
         }
     }

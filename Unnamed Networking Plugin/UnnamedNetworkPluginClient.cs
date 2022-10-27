@@ -159,9 +159,9 @@ public class UnnamedNetworkPluginClient
         return Connections[targetConnectionInformation];
     }
 
-    public async Task RemoveConnection(IConnectionInformation targetConnectionInformation)
+    public void RemoveConnection(IConnectionInformation targetConnectionInformation)
     {
-        await Connections[targetConnectionInformation].Disconnect();
+        Connections[targetConnectionInformation].Disconnect();
     }
 
     public async Task SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
