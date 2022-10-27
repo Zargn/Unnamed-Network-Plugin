@@ -2,6 +2,8 @@
 using System.Net.Sockets;
 using Unnamed_Networking_Plugin.Interfaces;
 
+
+
 namespace Unnamed_Networking_Plugin;
 
 public class UnnamedNetworkPluginClient
@@ -13,17 +15,40 @@ public class UnnamedNetworkPluginClient
     private int nextConnectionId = 0;
     private Listener listener;
     private Type connectionIdentificationType;
-
-    public IdentificationPackage identificationPackage { get; private set; }
-
+    private SemaphoreSlim temporarySignal;
+    private IdentificationPackage? temporaryRemoteIdentificationPackage;
     private Dictionary<IConnectionInformation, Connection> Connections = new();
     
+    /// <summary>
+    /// The currently configured identification package for this instance.
+    /// </summary>
+    public IdentificationPackage identificationPackage { get; private set; }
+    
+    /// <summary>
+    /// Invoked when a package has been received from any connected client.
+    /// Contains the package, package type, and ConnectionInformation of who sent it.
+    /// </summary>
     public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
 
+    /// <summary>
+    /// Invoked on a successful connection.
+    /// Contains the finished connection object and its associated ConnectionInformation.
+    /// </summary>
     public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 
+    /// <summary>
+    /// Invoked when a connection has been lost.
+    /// Contains the ConnectionInformation of the client which was lost.
+    /// </summary>
     public event EventHandler<ClientDisconnectedEventDetailedArgs>? ConnectionLost; 
 
+    /// <summary>
+    /// Constructor and configurator of the client.
+    /// </summary>
+    /// <param name="port">integer representing the port to listen to.</param>
+    /// <param name="logger">ILogger implementer to handle logging.</param>
+    /// <param name="jsonSerializer">IJsonSerializer implementer to handle serialization.</param>
+    /// <param name="identificationPackage">The identification package for this client.</param>
     public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IdentificationPackage identificationPackage)
     {
         this.port = port;
@@ -36,11 +61,21 @@ public class UnnamedNetworkPluginClient
         listener.Start();
     }
 
+    // TODO: Look into a way to do this automatically when the user has discarded this object.
+    /// <summary>
+    /// Manually stop the connection listener.
+    /// </summary>
     public async Task StopListener()
     {
         await listener.Stop();
     }
 
+    /// <summary>
+    /// Attempt to connect to the provided endpoint. If successful a connection object will be configured with the information provided by the endpoint.
+    /// </summary>
+    /// <param name="ipAddress">Target ip address.</param>
+    /// <param name="targetPort">Target port.</param>
+    /// <returns>If successful or not.</returns>
     public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
     {
         var tcpClient = new TcpClient();
@@ -65,8 +100,6 @@ public class UnnamedNetworkPluginClient
         var timeout = Timeout();
         var signalListener = SignalListener(temporarySignal);
 
-        // No need to await this...
-        // Or maybe we want to await it at the end of this method to make sure the receiver also added us as a connection?
        await connection.SendPackage(identificationPackage);
 
         Task.WaitAny(timeout, signalListener);
@@ -105,10 +138,12 @@ public class UnnamedNetworkPluginClient
         logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
         return false;
     }
-    
-    private SemaphoreSlim temporarySignal;
-    private IdentificationPackage? temporaryRemoteIdentificationPackage;
-    
+
+    /// <summary>
+    /// Handles listening to PackageReceived events from connections being set up.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
     private void GatherIdentificationPackage(object? sender, PackageReceivedEventArgs args)
     {
         temporaryRemoteIdentificationPackage = args.ReceivedPackage as IdentificationPackage;
@@ -132,11 +167,20 @@ public class UnnamedNetworkPluginClient
         await signal.WaitAsync();
     }
 
+    /// <summary>
+    /// Checks the Connections dictionary for connectionInformation matching the provided.
+    /// </summary>
+    /// <param name="connectionInformation">ConnectionInformation to search for.</param>
+    /// <returns>If a match was found or not.</returns>
     internal bool CheckIfIdentificationAlreadyPresent(IConnectionInformation connectionInformation)
     {
         return Connections.ContainsKey(connectionInformation);
     }
 
+    /// <summary>
+    /// Configures events and adds the provided connection to the dictionary.
+    /// </summary>
+    /// <param name="connection"></param>
     internal void AddConnectionToList(Connection connection)
     {
         Connections.Add(connection.ConnectionInformation, connection);
@@ -151,25 +195,46 @@ public class UnnamedNetworkPluginClient
         };
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(connection.ConnectionInformation, connection));
     }
-
-
-
+    
+    /// <summary>
+    /// Tries to get a connection based on the provided ConnectionInformation.
+    /// </summary>
+    /// <param name="targetConnectionInformation"></param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException">If there is no connection with matching information.</exception>
     public Connection GetConnectionFromList(IConnectionInformation targetConnectionInformation)
     {
         return Connections[targetConnectionInformation];
     }
 
+    /// <summary>
+    /// Tries to disconnect a connection with matching ConnectionInformation.
+    /// </summary>
+    /// <param name="targetConnectionInformation"></param>
+    /// <exception cref="KeyNotFoundException">If there is no connection with matching information.</exception>
     public void RemoveConnection(IConnectionInformation targetConnectionInformation)
     {
         Connections[targetConnectionInformation].Disconnect();
     }
 
+    /// <summary>
+    /// Tries to send the provided package to the client with provided ConnectionInformation.
+    /// </summary>
+    /// <param name="package">Package to be transmitted.</param>
+    /// <param name="targetConnectionInformation">Target connection information.</param>
+    /// <typeparam name="T">Package type</typeparam>
+    /// <exception cref="KeyNotFoundException">If there is no connection with matching information.</exception>
     public async Task SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
         where T : IPackage
     {
         await Connections[targetConnectionInformation].SendPackage(package);
     }
 
+    /// <summary>
+    /// Sends the provided package to all connected clients. This will run even if there are no clients connected.
+    /// </summary>
+    /// <param name="package">Package to be transmitted.</param>
+    /// <typeparam name="T">Package type.</typeparam>
     public async Task SendPackageToAllConnections<T>(T package)
     where T : IPackage
     {
@@ -178,6 +243,9 @@ public class UnnamedNetworkPluginClient
     }
 }
 
+/// <summary>
+/// Event information for disconnections.
+/// </summary>
 public class ClientDisconnectedEventDetailedArgs : ClientDisconnectedEventArgs
 {
     public ClientDisconnectedEventDetailedArgs(bool remoteDisconnected, IConnectionInformation connectionInformation) : base(remoteDisconnected)
