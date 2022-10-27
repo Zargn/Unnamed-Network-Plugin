@@ -22,6 +22,8 @@ public class UnnamedNetworkPluginClient
 
     public event EventHandler<ConnectionReceivedEventArgs>? ConnectionSuccessful;
 
+    public event EventHandler<ClientDisconnectedEventDetailedArgs>? ConnectionLost; 
+
     public UnnamedNetworkPluginClient(int port, ILogger logger, IJsonSerializer jsonSerializer, IdentificationPackage identificationPackage)
     {
         this.port = port;
@@ -130,6 +132,10 @@ public class UnnamedNetworkPluginClient
         {
             PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, args.PackageType, IPAddress.Loopback));
         };
+        connection.ClientDisconnected += (o, args) =>
+        {
+            ConnectionLost?.Invoke(o, new ClientDisconnectedEventDetailedArgs(args.RemoteDisconnected, connection.ConnectionInformation));
+        };
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(connection.ConnectionInformation, connection));
     }
 
@@ -140,16 +146,15 @@ public class UnnamedNetworkPluginClient
         return Connections[targetConnectionInformation];
     }
 
-    public void RemoveConnection(IConnectionInformation targetConnectionInformation)
+    public async Task RemoveConnection(IConnectionInformation targetConnectionInformation)
     {
-        Connections[targetConnectionInformation].Disconnect();
+        await Connections[targetConnectionInformation].Disconnect();
     }
 
     public async Task SendPackage<T>(T package, IConnectionInformation targetConnectionInformation)
         where T : IPackage
     {
         await Connections[targetConnectionInformation].SendPackage(package);
-        // PackageReceived?.Invoke(this, new PackageReceivedEventArgs(package, IPAddress.Loopback));
     }
 
     public async Task SendPackageToAllConnections<T>(T package)
@@ -160,6 +165,15 @@ public class UnnamedNetworkPluginClient
     }
 }
 
+public class ClientDisconnectedEventDetailedArgs : ClientDisconnectedEventArgs
+{
+    public ClientDisconnectedEventDetailedArgs(bool remoteDisconnected, IConnectionInformation connectionInformation) : base(remoteDisconnected)
+    {
+        ConnectionInformation = connectionInformation;
+    }
+
+    public IConnectionInformation ConnectionInformation { get; }
+}
 
 /// <summary>
 /// Event information for successful connections.
