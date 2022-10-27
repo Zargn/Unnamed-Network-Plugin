@@ -88,6 +88,13 @@ public class UnnamedNetworkPluginClient
                 logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
                 return false;
             }
+            
+            if (CheckIfIdentificationAlreadyPresent(remoteInformation))
+            {
+                logger.Log(this, $"Connecting client from {remoteInformation} is already connected. Disconnecting...", LogType.Information);
+                // TODO: Send package informing client about the denied connection before disconnecting 
+                return false;
+            }
 
             logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
             connection.ConnectionInformation = remoteInformation;
@@ -123,6 +130,11 @@ public class UnnamedNetworkPluginClient
     private static async Task SignalListener(SemaphoreSlim signal)
     {
         await signal.WaitAsync();
+    }
+
+    internal bool CheckIfIdentificationAlreadyPresent(IConnectionInformation connectionInformation)
+    {
+        return Connections.ContainsKey(connectionInformation);
     }
 
     internal void AddConnectionToList(Connection connection)

@@ -101,6 +101,13 @@ public class Listener
                         continue;
                     }
 
+                    if (unnamedNetworkPluginClient.CheckIfIdentificationAlreadyPresent(remoteInformation))
+                    {
+                        logger.Log(this, $"Connecting client from {remoteInformation} is already connected. Disconnecting...", LogType.Information);
+                        // TODO: Send package informing client about the denied connection before disconnecting 
+                        continue;
+                    }
+
                     logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
                     connection.ConnectionInformation = remoteInformation;
                     unnamedNetworkPluginClient.AddConnectionToList(connection);
