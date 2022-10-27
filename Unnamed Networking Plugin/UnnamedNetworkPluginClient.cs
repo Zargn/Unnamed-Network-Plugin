@@ -114,6 +114,7 @@ public class UnnamedNetworkPluginClient
             if (temporaryRemoteIdentificationPackage == null)
             {
                 logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
+                connection.Disconnect();
                 return false;
             }
 
@@ -122,6 +123,7 @@ public class UnnamedNetworkPluginClient
             if (remoteInformation == null)
             {
                 logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
+                connection.Disconnect();
                 return false;
             }
             
@@ -129,6 +131,7 @@ public class UnnamedNetworkPluginClient
             {
                 logger.Log(this, $"Connecting client from {remoteInformation} is already connected. Disconnecting...", LogType.Information);
                 // TODO: Send package informing client about the denied connection before disconnecting 
+                connection.Disconnect();
                 return false;
             }
 
@@ -139,6 +142,7 @@ public class UnnamedNetworkPluginClient
         }
         
         logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
+        connection.Disconnect();
         return false;
     }
 
