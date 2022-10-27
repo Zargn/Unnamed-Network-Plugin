@@ -130,7 +130,7 @@ public class UnnamedNetworkPluginClient
         Connections.Add(connection.ConnectionInformation, connection);
         connection.PackageReceived += (o, args) =>
         {
-            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, args.PackageType, IPAddress.Loopback));
+            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, args.PackageType, connection.ConnectionInformation));
         };
         connection.ClientDisconnected += (o, args) =>
         {
@@ -195,10 +195,10 @@ public class ConnectionReceivedEventArgs
 /// </summary>
 public class PackageReceivedEventDetailedArgs : PackageReceivedEventArgs
 {
-    public PackageReceivedEventDetailedArgs(IPackage receivedPackage, Type packageType, IPAddress senderIpAddress) : base(receivedPackage, packageType)
+    public PackageReceivedEventDetailedArgs(IPackage receivedPackage, Type packageType, IConnectionInformation connectionInformation) : base(receivedPackage, packageType)
     {
-        SenderIpAddress = senderIpAddress;
+        ConnectionInformation = connectionInformation;
     }
-    
-    public IPAddress SenderIpAddress { get; }
+
+    public IConnectionInformation ConnectionInformation;
 }
