@@ -6,11 +6,12 @@ namespace Network_Plugin_User_frontend;
 
 public static class Initializer
 {
-    public static void Main()
+    public static async Task Main()
     {
         string? name = SimpleConsoleHelpers.RequestStringInput("Please enter your name: ");
         NetworkPluginConsole networkPluginConsole = new(name);
-        networkPluginConsole.Run();
+        var client = networkPluginConsole.Run();
+        await client;
     }
 }
 
@@ -27,7 +28,7 @@ public class NetworkPluginConsole
         client = new(25565, new Logger(), new JsonSerializerAdapter(), new NameIdentifierPackage(nameIdentifier));
     }
 
-    public void Run()
+    public async Task Run()
     {
         client.ConnectionSuccessful += (sender, args) =>
         {
@@ -41,8 +42,7 @@ public class NetworkPluginConsole
         {
             Console.WriteLine($"User with name: [{args.ConnectionInformation}] has disconnected.");
         };
-        var mainLoop = MainLoop();
-        Task.WaitAny(mainLoop);
+        await MainLoop();
         Console.WriteLine("Loop ended.");
     }
 
