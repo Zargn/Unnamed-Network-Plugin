@@ -18,11 +18,13 @@ public class NetworkPluginConsole
 {
     private UnnamedNetworkPluginClient client;
     // private UnnamedNetworkPluginClient server = new(25566, new Logger(), new JsonSerializerAdapter(), new PortIdentifier(25566));
+    private NameIdentifier nameIdentifier;
 
 
     public NetworkPluginConsole(string name)
     {
-        client = new(25565, new Logger(), new JsonSerializerAdapter(), new NameIdentifierPackage(new NameIdentifier(name)));
+        nameIdentifier = new NameIdentifier(name);
+        client = new(25565, new Logger(), new JsonSerializerAdapter(), new NameIdentifierPackage(nameIdentifier));
     }
 
     public void Run()
@@ -37,6 +39,7 @@ public class NetworkPluginConsole
         };
         var mainLoop = MainLoop();
         Task.WaitAny(mainLoop);
+        Console.WriteLine("Loop ended.");
     }
 
     private async Task MainLoop()
@@ -46,6 +49,8 @@ public class NetworkPluginConsole
             var operation = GetUserInput();
             switch (operation)
             {
+                case Operation.Send:
+                    break;
                 case Operation.SendAll:
                     SendMessageToAll();
                     break;
@@ -53,8 +58,10 @@ public class NetworkPluginConsole
                     await Connect();
                     break;
                 case Operation.Disconnect:
+                    Disconnect();
                     break;
                 case Operation.Quit:
+                    Console.WriteLine("Quit.");
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -64,6 +71,7 @@ public class NetworkPluginConsole
 
     private enum Operation
     {
+        Send,
         SendAll,
         Connect,
         Disconnect,
@@ -74,12 +82,14 @@ public class NetworkPluginConsole
     {
         while (true)
         {
-            Console.WriteLine("[Q] = quit, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client.");
+            Console.WriteLine("[Q] = quit, [S] = send message, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client.");
             var inputString = Console.ReadLine();
             switch (inputString.ToLower())
             {
                 case "q":
                     return Operation.Quit;
+                case "s":
+                    return Operation.Send;
                 case "sa":
                     return Operation.SendAll;
                 case "c":
@@ -97,7 +107,7 @@ public class NetworkPluginConsole
     {
         Console.WriteLine("Please enter message to send: ");
         var message = Console.ReadLine();
-        var task = client.SendPackageToAllConnections(new TextMessagePackage(message));
+        var task = client.SendPackageToAllConnections(new TextMessagePackage(message, nameIdentifier));
     }
 
     private async Task Connect()
