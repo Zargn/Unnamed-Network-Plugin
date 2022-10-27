@@ -1,5 +1,5 @@
 ﻿using Unnamed_Networking_Plugin;
-using Unnamed_Networking_Plugin.Packages;
+using Unnamed_Networking_Plugin.Resources;
 
 namespace Unnamed_Networking_Plugin_Tests;
 

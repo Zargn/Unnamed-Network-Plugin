@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Runtime.Loader;
 using System.Threading.Channels;
 using Unnamed_Networking_Plugin.Interfaces;
-using Unnamed_Networking_Plugin.Packages;
+using Unnamed_Networking_Plugin.Resources;
 
 namespace Unnamed_Networking_Plugin;
 

@@ -1,6 +1,6 @@
 ﻿using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Interfaces;
-using Unnamed_Networking_Plugin.Packages;
+using Unnamed_Networking_Plugin.Resources;
 
 namespace Network_Plugin_User_frontend;
 
