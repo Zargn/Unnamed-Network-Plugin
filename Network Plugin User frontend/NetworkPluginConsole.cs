@@ -31,11 +31,15 @@ public class NetworkPluginConsole
     {
         client.ConnectionSuccessful += (sender, args) =>
         {
-            Console.WriteLine($"Connection successful. User with name: [{args.ConnectionInformation}] has been connected!");
+            Console.WriteLine($"User with name: [{args.ConnectionInformation}] has been connected!");
         };
         client.PackageReceived += (sender, args) =>
         {
-            Console.WriteLine($"[{args.ReceivedPackage}]");
+            Console.WriteLine(args.ReceivedPackage);
+        };
+        client.ConnectionLost += (sender, args) =>
+        {
+            Console.WriteLine($"User with name: [{args.ConnectionInformation}] has disconnected.");
         };
         var mainLoop = MainLoop();
         Task.WaitAny(mainLoop);
