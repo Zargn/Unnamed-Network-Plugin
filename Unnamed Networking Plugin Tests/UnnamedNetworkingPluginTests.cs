@@ -206,7 +206,23 @@ public class UnnamedNetworkingPluginTests
     [Test]
     public async Task ClientReportsRemoteDisconnect()
     {
+        SemaphoreSlim signal = new SemaphoreSlim(0, 1);
+        receiveClient25566.ConnectionSuccessful += (sender, args) =>
+        {
+            signal.Release();
+        };
+        
+        var timeout = Timeout();
+        var listener = Listener(signal);
+
         await mainClient.AddConnection(IPAddress.Loopback, 25566);
+
+        Task.WaitAny(listener, timeout);
+        Assert.IsTrue(listener.IsCompleted);
+        if (!listener.IsCompleted)
+        {
+            return;
+        }
 
         bool localDisconnect = true;
         var signal1 = new SemaphoreSlim(0, 1);
@@ -216,12 +232,12 @@ public class UnnamedNetworkingPluginTests
             signal1.Release();
         };
     
-        var timeout = Timeout();
-        var listener = Listener(signal1);
+        var timeout1 = Timeout();
+        var listener1 = Listener(signal1);
         
         mainClient.GetConnectionFromList(new PortIdentifier(25566)).Disconnect();
     
-        Task.WaitAny(timeout, listener);
+        Task.WaitAny(timeout1, listener1);
         Assert.IsTrue(listener.IsCompleted);
         Assert.IsFalse(localDisconnect);
     }
