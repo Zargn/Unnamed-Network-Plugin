@@ -103,8 +103,6 @@ public class UnnamedNetworkPluginClient
         var timeout = Timeout();
         var signalListener = SignalListener(temporarySignal);
 
-       await connection.SendPackage(identificationPackage);
-
         Task.WaitAny(timeout, signalListener);
         
         connection.PackageReceived -= GatherIdentificationPackage;
@@ -134,6 +132,8 @@ public class UnnamedNetworkPluginClient
                 connection.Disconnect();
                 return false;
             }
+            
+            await connection.SendPackage(identificationPackage);
 
             logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
             connection.ConnectionInformation = remoteInformation;

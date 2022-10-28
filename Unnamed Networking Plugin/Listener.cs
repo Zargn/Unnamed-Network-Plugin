@@ -60,19 +60,16 @@ public class Listener
         {
             while (true)
             {
+                // Todo: Might be better to just reset the signal instead of creating a new instance.
+                temporarySignal = new SemaphoreSlim(0, 1);
+                temporaryRemoteIdentificationPackage = null;
+                
                 var client = await tcpListener.AcceptTcpClientAsync(token);
 
                 logger.Log(this, $"Connection request received.", LogType.Information);
 
                 var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
-
-
-
                 
-                // Todo: Might be better to just reset the signal instead of creating a new instance.
-                temporarySignal = new SemaphoreSlim(0, 1);
-                temporaryRemoteIdentificationPackage = null;
-
                 connection.PackageReceived += GatherIdentificationPackage;
 
                 var timeout = Timeout();
