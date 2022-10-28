@@ -54,6 +54,7 @@ public class NetworkPluginConsole
             switch (operation)
             {
                 case Operation.Send:
+                    await SendMessage();
                     break;
                 case Operation.SendAll:
                     SendMessageToAll();
@@ -110,6 +111,21 @@ public class NetworkPluginConsole
                     Console.WriteLine("Invalid input. Try again!");
                     break;
             }
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        var targetUser = SimpleConsoleHelpers.RequestStringInput("Please enter target username");
+        try
+        {
+            var targetConnection = client.GetConnectionFromList(new NameIdentifier(targetUser));
+            var message = SimpleConsoleHelpers.RequestStringInput("Please enter message to send: ");
+            await targetConnection.SendPackage(new TextMessagePackage(message, nameIdentifier));
+        }
+        catch (KeyNotFoundException)
+        {
+            Console.WriteLine("Invalid username.");
         }
     }
 
