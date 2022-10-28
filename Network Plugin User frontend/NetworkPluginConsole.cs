@@ -54,6 +54,7 @@ public class NetworkPluginConsole
             switch (operation)
             {
                 case Operation.Send:
+                    await SendMessage();
                     break;
                 case Operation.SendAll:
                     SendMessageToAll();
@@ -63,6 +64,9 @@ public class NetworkPluginConsole
                     break;
                 case Operation.Disconnect:
                     Disconnect();
+                    break;
+                case Operation.List:
+                    ListConnections();
                     break;
                 case Operation.Quit:
                     Console.WriteLine("Quit.");
@@ -79,14 +83,15 @@ public class NetworkPluginConsole
         SendAll,
         Connect,
         Disconnect,
-        Quit
+        Quit,
+        List
     }
 
     private Operation GetUserInput()
     {
         while (true)
         {
-            Console.WriteLine("[Q] = quit, [S] = send message, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client.");
+            Console.WriteLine("[Q] = quit, [S] = send message, [SA] = send message to all, [C] = add connection to client, [D] = disconnect from client, [L] = list connections.");
             var inputString = Console.ReadLine();
             switch (inputString.ToLower())
             {
@@ -100,10 +105,27 @@ public class NetworkPluginConsole
                     return Operation.Connect;
                 case "d":
                     return Operation.Disconnect;
+                case "l":
+                    return Operation.List;
                 default:
                     Console.WriteLine("Invalid input. Try again!");
                     break;
             }
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        var targetUser = SimpleConsoleHelpers.RequestStringInput("Please enter target username");
+        try
+        {
+            var targetConnection = client.GetConnectionFromList(new NameIdentifier(targetUser));
+            var message = SimpleConsoleHelpers.RequestStringInput("Please enter message to send: ");
+            await targetConnection.SendPackage(new TextMessagePackage(message, nameIdentifier));
+        }
+        catch (KeyNotFoundException)
+        {
+            Console.WriteLine("Invalid username.");
         }
     }
 
@@ -142,5 +164,14 @@ public class NetworkPluginConsole
         var targetConnectionName =
             SimpleConsoleHelpers.RequestStringInput("Please enter name of client to disconnect.");
         client.RemoveConnection(new NameIdentifier(targetConnectionName));
+    }
+
+    private void ListConnections()
+    {
+        Console.WriteLine("Connected clients:");
+        foreach (var pair in client.Connections)
+        {
+            Console.WriteLine(pair.Key);
+        }
     }
 }

@@ -107,7 +107,7 @@ public class Connection
                 if (resultPackage == null)
                 {
                     logger.Log(this,
-                        $"Result Package was null. This should not happen, is something wrong with your IJsonSerializer class?",
+                        $"Result Package was null. This should not happen, is something wrong with your IJsonSerializer class?", 
                         LogType.Warning);
                     continue;
                 }

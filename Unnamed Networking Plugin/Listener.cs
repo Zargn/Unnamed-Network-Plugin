@@ -60,19 +60,16 @@ public class Listener
         {
             while (true)
             {
+                // Todo: Might be better to just reset the signal instead of creating a new instance.
+                temporarySignal = new SemaphoreSlim(0, 1);
+                temporaryRemoteIdentificationPackage = null;
+                
                 var client = await tcpListener.AcceptTcpClientAsync(token);
 
                 logger.Log(this, $"Connection request received.", LogType.Information);
 
                 var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
-
-
-
                 
-                // Todo: Might be better to just reset the signal instead of creating a new instance.
-                temporarySignal = new SemaphoreSlim(0, 1);
-                temporaryRemoteIdentificationPackage = null;
-
                 connection.PackageReceived += GatherIdentificationPackage;
 
                 var timeout = Timeout();
@@ -91,6 +88,7 @@ public class Listener
                     if (temporaryRemoteIdentificationPackage == null)
                     {
                         logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
+                        connection.Disconnect();
                         continue;
                     }
 
@@ -99,6 +97,7 @@ public class Listener
                     if (remoteInformation == null)
                     {
                         logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
+                        connection.Disconnect();
                         continue;
                     }
 
@@ -106,6 +105,7 @@ public class Listener
                     {
                         logger.Log(this, $"Connecting client from {remoteInformation} is already connected. Disconnecting...", LogType.Information);
                         // TODO: Send package informing client about the denied connection before disconnecting 
+                        connection.Disconnect();
                         continue;
                     }
 
@@ -115,6 +115,7 @@ public class Listener
                     continue;
                 }
         
+                connection.Disconnect();
                 logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
             }
         }

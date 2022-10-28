@@ -18,8 +18,10 @@ public class UnnamedNetworkPluginClient
     private Type connectionIdentificationType;
     private SemaphoreSlim temporarySignal;
     private IdentificationPackage? temporaryRemoteIdentificationPackage;
-    private Dictionary<IConnectionInformation, Connection> Connections = new();
-    
+    private Dictionary<IConnectionInformation, Connection> connections = new();
+
+    public Dictionary<IConnectionInformation, Connection> Connections => connections;
+
     /// <summary>
     /// The currently configured identification package for this instance.
     /// </summary>
@@ -101,8 +103,6 @@ public class UnnamedNetworkPluginClient
         var timeout = Timeout();
         var signalListener = SignalListener(temporarySignal);
 
-       await connection.SendPackage(identificationPackage);
-
         Task.WaitAny(timeout, signalListener);
         
         connection.PackageReceived -= GatherIdentificationPackage;
@@ -112,6 +112,7 @@ public class UnnamedNetworkPluginClient
             if (temporaryRemoteIdentificationPackage == null)
             {
                 logger.Log(this, "Received identification package was invalid. Disconnecting...", LogType.HandledError);
+                connection.Disconnect();
                 return false;
             }
 
@@ -120,6 +121,7 @@ public class UnnamedNetworkPluginClient
             if (remoteInformation == null)
             {
                 logger.Log(this, "Received information was null. Please check your identification package class.", LogType.HandledError);
+                connection.Disconnect();
                 return false;
             }
             
@@ -127,8 +129,11 @@ public class UnnamedNetworkPluginClient
             {
                 logger.Log(this, $"Connecting client from {remoteInformation} is already connected. Disconnecting...", LogType.Information);
                 // TODO: Send package informing client about the denied connection before disconnecting 
+                connection.Disconnect();
                 return false;
             }
+            
+            await connection.SendPackage(identificationPackage);
 
             logger.Log(this, $"Received connection from {remoteInformation}", LogType.Information);
             connection.ConnectionInformation = remoteInformation;
@@ -137,6 +142,7 @@ public class UnnamedNetworkPluginClient
         }
         
         logger.Log(this, "Remote did not provide identification. Disconnecting...", LogType.HandledError);
+        connection.Disconnect();
         return false;
     }
 
