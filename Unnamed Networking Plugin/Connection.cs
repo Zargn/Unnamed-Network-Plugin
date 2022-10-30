@@ -117,6 +117,7 @@ public class Connection
             catch (IOException)
             {
                 logger.Log(this, $"Client {ConnectionInformation} lost connection.", LogType.Information);
+                Disconnect();
                 return;
             }
             catch (Exception e)
