@@ -59,6 +59,9 @@ public class Connection
     where T : IPackage
     {
         var json = jsonSerializer.Serialize(package, package.GetType());
+        
+        logger.Log(this, $"Sent json: {json}", LogType.Information);
+        
         if (json == null)
         {
             logger.Log(this, "Result Json was null", LogType.Warning);
@@ -78,6 +81,9 @@ public class Connection
             try
             {
                 var json = await streamReader.ReadLineAsync();
+                
+                logger.Log(this, $"Received json: {json}", LogType.Information);
+                
                 if (json == null)
                 {
                     logger.Log(this, $"Received json was null, disconnecting...", LogType.HandledError);

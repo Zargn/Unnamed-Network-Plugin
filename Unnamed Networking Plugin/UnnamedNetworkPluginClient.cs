@@ -81,11 +81,15 @@ public class UnnamedNetworkPluginClient
     /// <returns>If successful or not.</returns>
     public async Task<bool> AddConnection(IPAddress ipAddress, int targetPort)
     {
+        temporarySignal = new SemaphoreSlim(0, 1);
+        temporaryRemoteIdentificationPackage = null;
+        
         var tcpClient = new TcpClient();
         try
         {
             await tcpClient.ConnectAsync(ipAddress, targetPort);
         }
+        // TODO: This should target only expected exceptions.
         catch (Exception e)
         {
             logger.Log(this, @$"An error occured when attempting to connect to {ipAddress}:{targetPort} 
@@ -95,9 +99,8 @@ public class UnnamedNetworkPluginClient
 
         var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
 
-        temporarySignal = new SemaphoreSlim(0, 1);
-        temporaryRemoteIdentificationPackage = null;
-
+        Console.WriteLine("TODO: The program breaks here at row 102 in main script. The event is not subscribed to early enough.");
+        // TODO: Try moving the connect method to the connection class itself.
         connection.PackageReceived += GatherIdentificationPackage;
         
         var timeout = Timeout();
