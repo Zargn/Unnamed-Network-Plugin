@@ -83,11 +83,16 @@ public class UnnamedNetworkPluginClient
     {
         temporarySignal = new SemaphoreSlim(0, 1);
         temporaryRemoteIdentificationPackage = null;
+
+        var connection = new Connection(jsonSerializer, logger);
         
-        var tcpClient = new TcpClient();
+        // TODO: Try moving the connect method to the connection class itself.
+        
+        connection.PackageReceived += GatherIdentificationPackage;
+        
         try
         {
-            await tcpClient.ConnectAsync(ipAddress, targetPort);
+            await connection.ConnectAsync(ipAddress, targetPort);
         }
         // TODO: This should target only expected exceptions.
         catch (Exception e)
@@ -97,12 +102,6 @@ public class UnnamedNetworkPluginClient
             return false;
         }
 
-        var connection = new Connection(tcpClient ,tcpClient.GetStream(), jsonSerializer, logger);
-
-        Console.WriteLine("TODO: The program breaks here at row 102 in main script. The event is not subscribed to early enough.");
-        // TODO: Try moving the connect method to the connection class itself.
-        connection.PackageReceived += GatherIdentificationPackage;
-        
         var timeout = Timeout();
         var signalListener = SignalListener(temporarySignal);
 

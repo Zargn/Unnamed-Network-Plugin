@@ -68,7 +68,7 @@ public class Listener
 
                 logger.Log(this, $"Connection request received.", LogType.Information);
 
-                var connection = new Connection(client, client.GetStream(), unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
+                var connection = new Connection(client, unnamedNetworkPluginClient.jsonSerializer, unnamedNetworkPluginClient.logger);
                 
                 connection.PackageReceived += GatherIdentificationPackage;
 
