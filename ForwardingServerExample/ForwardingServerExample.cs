@@ -1,6 +1,4 @@
-﻿
-
-using ForwardingServer;
+﻿using ForwardingServer;
 
 namespace ForwardingServerExample;
 
@@ -9,10 +7,10 @@ public class ForwardingServerExample
     public static void Main()
     {
         var server = new ForwardingServerExample();
-        server.StartServer();
+        var task = server.StartServer();
     }
 
-    private void StartServer()
+    private async Task StartServer()
     {
         var identification = new UserIdentification("ForwardingServer");
         var jsonSerializer = new JsonSerializerAdapter();
@@ -22,5 +20,13 @@ public class ForwardingServerExample
         var serverTask = forwardingServer.Run();
         
         // TODO: Ask user for cancellation.
+        while (true)
+        {
+            Console.WriteLine("Write Q to quit.");
+            var result = Console.ReadLine();
+            if (result.ToLower() != "q") continue;
+            await forwardingServer.Stop();
+            return;
+        }
     }
 }
