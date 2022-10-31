@@ -1,4 +1,6 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
+using System.Text.Json;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 
@@ -7,7 +9,7 @@ namespace Unnamed_Networking_Plugin;
 public class Connection
 {
     public TcpClient TcpClient { get; }
-    public Stream DataStream { get; }
+    public Stream DataStream { get; private set; }
     
     public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
     public event EventHandler<ClientDisconnectedEventArgs>? ClientDisconnected;
@@ -17,8 +19,8 @@ public class Connection
     public IConnectionInformation ConnectionInformation { get; set; }
 
     
-    private StreamReader streamReader { get; }
-    private StreamWriter streamWriter { get; }
+    private StreamReader streamReader { get; set; }
+    private StreamWriter streamWriter { get; set; }
 
     private IJsonSerializer jsonSerializer;
     private ILogger logger;
@@ -26,21 +28,70 @@ public class Connection
     private Task packageListenerTask;
 
     private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+    
+    public bool Connected { get; private set; }
 
 
-    public Connection(TcpClient tcpClient, Stream dataStream, IJsonSerializer jsonSerializer, ILogger logger)
+    public Connection(IJsonSerializer jsonSerializer, ILogger logger)
+    {
+        TcpClient = new TcpClient();
+        this.jsonSerializer = jsonSerializer;
+        this.logger = logger;
+    }
+
+    public Connection(TcpClient tcpClient, IJsonSerializer jsonSerializer, ILogger logger)
     {
         TcpClient = tcpClient;
-        DataStream = dataStream;
         this.jsonSerializer = jsonSerializer;
         this.logger = logger;
         
-        streamReader = new StreamReader(dataStream);
-        streamWriter = new StreamWriter(dataStream);
+        DataStream = TcpClient.GetStream();
+        streamReader = new StreamReader(DataStream);
+        streamWriter = new StreamWriter(DataStream);
         
-        logger.Log(this, "Connection created", LogType.Information);
+        logger.Log(this, "Connection established", LogType.Information);
         
         packageListenerTask = PackageListener();
+
+        Connected = true;
+    }
+    
+    public async Task ConnectAsync(IPAddress ipAddress, int targetPort)
+    {
+        if (Connected)
+        {
+            logger.Log(this, $"ConnectAsync was called when the connection is already active. This does not work and should be stopped.", LogType.Error);
+            throw new Exception(
+                "This connection object is already actively connected and therefor can not connect again.");
+        }
+        
+        try
+        {
+            await TcpClient.ConnectAsync(ipAddress, targetPort);
+        }
+        catch (Exception e)
+        {
+            logger.Log(this, @$"An error occured when attempting to connect to {ipAddress}:{targetPort} 
+{e}", LogType.HandledError);
+            throw;
+        }
+
+        // TODO: Move identification sending to here instead?
+        
+        
+        
+        
+        
+        
+        DataStream = TcpClient.GetStream();
+        streamReader = new StreamReader(DataStream);
+        streamWriter = new StreamWriter(DataStream);
+        
+        logger.Log(this, "Connection established", LogType.Information);
+        
+        packageListenerTask = PackageListener();
+
+        Connected = true;
     }
 
     public void Disconnect()
@@ -59,6 +110,9 @@ public class Connection
     where T : IPackage
     {
         var json = jsonSerializer.Serialize(package, package.GetType());
+        
+        logger.Log(this, $"Sent json: {json}", LogType.Information);
+        
         if (json == null)
         {
             logger.Log(this, "Result Json was null", LogType.Warning);
@@ -78,6 +132,9 @@ public class Connection
             try
             {
                 var json = await streamReader.ReadLineAsync();
+                
+                logger.Log(this, $"Received json: {json}", LogType.Information);
+                
                 if (json == null)
                 {
                     logger.Log(this, $"Received json was null, disconnecting...", LogType.HandledError);
