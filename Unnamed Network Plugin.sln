@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Network Plugin User fronten
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unnamed Networking Plugin Tests", "Unnamed Networking Plugin Tests\Unnamed Networking Plugin Tests.csproj", "{6DF602FC-88A5-4025-8F5D-8634B16E1A2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForwardingServer", "ForwardingServer\ForwardingServer.csproj", "{0A66AB57-AC62-450B-BB82-C2730B055806}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{6DF602FC-88A5-4025-8F5D-8634B16E1A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DF602FC-88A5-4025-8F5D-8634B16E1A2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DF602FC-88A5-4025-8F5D-8634B16E1A2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A66AB57-AC62-450B-BB82-C2730B055806}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A66AB57-AC62-450B-BB82-C2730B055806}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A66AB57-AC62-450B-BB82-C2730B055806}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A66AB57-AC62-450B-BB82-C2730B055806}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
