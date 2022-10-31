@@ -116,7 +116,7 @@ public class NetworkPluginConsole
 
     private async Task SendMessage()
     {
-        var targetUser = SimpleConsoleHelpers.RequestStringInput("Please enter target username");
+        var targetUser = SimpleConsoleHelpers.RequestStringInput("Please enter target username: ");
         try
         {
             var targetConnection = client.GetConnectionFromList(new NameIdentifier(targetUser));
@@ -138,7 +138,7 @@ public class NetworkPluginConsole
 
     private async Task Connect()
     {
-        var ipString =SimpleConsoleHelpers.RequestStringInput("Please enter target ip:");
+        var ipString =SimpleConsoleHelpers.RequestStringInput("Please enter target ip: ");
         IPAddress ip = null;
         try
         {
@@ -150,7 +150,7 @@ public class NetworkPluginConsole
             return;
         }
 
-        var port = SimpleConsoleHelpers.RequestIntInput("Please enter port:");
+        var port = SimpleConsoleHelpers.RequestIntInput("Please enter port: ");
         var connection = client.AddConnection(ip, port);
         await connection;
         if (!connection.Result)
@@ -162,7 +162,7 @@ public class NetworkPluginConsole
     private void Disconnect()
     {
         var targetConnectionName =
-            SimpleConsoleHelpers.RequestStringInput("Please enter name of client to disconnect.");
+            SimpleConsoleHelpers.RequestStringInput("Please enter name of client to disconnect: ");
         client.RemoveConnection(new NameIdentifier(targetConnectionName));
     }
 

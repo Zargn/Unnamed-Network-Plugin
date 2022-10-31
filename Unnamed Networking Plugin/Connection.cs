@@ -173,7 +173,7 @@ public class Connection
             }
             catch (IOException)
             {
-                logger.Log(this, $"Client {ConnectionInformation} lost connection.", LogType.Information);
+                logger.Log(this, $"Client {ConnectionInformation} unexpectedly lost connection.", LogType.Information);
                 Disconnect();
                 return;
             }
