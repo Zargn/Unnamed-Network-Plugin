@@ -8,6 +8,7 @@ public class ForwardingServerExample
     {
         var server = new ForwardingServerExample();
         var task = server.StartServer();
+        task.Wait();
     }
 
     private async Task StartServer()
@@ -30,3 +31,4 @@ public class ForwardingServerExample
         }
     }
 }
+
