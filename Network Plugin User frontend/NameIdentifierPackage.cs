@@ -14,7 +14,7 @@ public class NameIdentifierPackage : IdentificationPackage
         NameIdentifier = nameIdentifier;
     }
 
-    public override IConnectionInformation? ExtractConnectionInformation()
+    public override IConnectionInformation ExtractConnectionInformation()
     {
         return NameIdentifier;
     }

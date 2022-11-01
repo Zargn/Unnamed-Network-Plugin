@@ -12,7 +12,7 @@ public class UserIdentificationPackage : IdentificationPackage
         UserIdentification = userIdentification;
     }
 
-    public override IConnectionInformation? ExtractConnectionInformation()
+    public override IConnectionInformation ExtractConnectionInformation()
     {
         return UserIdentification;
     }
