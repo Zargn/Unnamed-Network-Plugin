@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Unnamed Networking Plugin\Unnamed Networking Plugin.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="EventArgs" />
+    </ItemGroup>
+
 </Project>
