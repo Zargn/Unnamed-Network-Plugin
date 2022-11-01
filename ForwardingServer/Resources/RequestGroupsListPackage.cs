@@ -2,7 +2,7 @@
 
 namespace ForwardingServer.Resources;
 
-public class ListGroupsPackage : Package
+public class RequestGroupsListPackage : Package
 {
     
 }
