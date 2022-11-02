@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <Folder Include="EventArgs" />
+      <Folder Include="Group\Resources" />
     </ItemGroup>
 
 </Project>
