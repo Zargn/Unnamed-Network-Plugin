@@ -34,15 +34,21 @@ public class ConnectionGroup
     {
         if (MemberCount >= groupSettings.MaxSize)
             return false;
+        
+        
+        
+        connection.PackageReceived += Broker.InvokeSubscribers;
+        // connection.ClientDisconnected += HandleClientDisconnected;
 
-        // connection.PackageReceived += Broker.InvokeSubscribers;
+        members.Add(connection);
         
         return true;
     }
 
     public void Leave(Connection connection)
     {
-        
+        connection.PackageReceived -= Broker.InvokeSubscribers;
+        // connection.ClientDisconnected -= HandleClientDisconnected;
     }
 
     private void SetUpSubscribers()
@@ -52,6 +58,11 @@ public class ConnectionGroup
         Broker.SubscribeToPackage<RequestGroupInformationPackage>(HandleRequestGroupInformationPackage);
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
     }
+
+    // private void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
+    // {
+    //     Leave();
+    // }
     
     private void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
     {

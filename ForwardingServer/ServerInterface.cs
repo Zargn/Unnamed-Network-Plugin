@@ -18,6 +18,16 @@ public class ServerInterface
         this.client = client;
     }
 
+    public void PutInMenu(Connection connection)
+    {
+        
+    }
+
+    public void RemoveFromMenu(Connection connection)
+    {
+        
+    }
+
     public void HandleListGroupsPackage(PackageReceivedEventArgs args)
     {
         List<GroupInformation> groupInformationList = connectionGroups.Select(connectionGroup => connectionGroup.GroupInformation).ToList();

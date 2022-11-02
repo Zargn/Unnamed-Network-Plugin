@@ -70,7 +70,7 @@ public class PackageBroker
 
     }
 
-    public void InvokeSubscribers(PackageReceivedEventArgs packageReceivedEventArgs)
+    public void InvokeSubscribers(object? o, PackageReceivedEventArgs packageReceivedEventArgs)
     {
         if (listeners.TryGetValue(packageReceivedEventArgs.PackageType, out var listener))
         {

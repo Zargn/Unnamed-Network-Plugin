@@ -46,11 +46,24 @@ public class FwServer
         
         Running = true;
         var client = new UnnamedNetworkPluginClient(port, logger, jsonSerializer, identificationPackage);
+
+        client.ConnectionSuccessful += ConnectionSuccessfulHandler;
+        
         serverInterface = new ServerInterface(connectionGroups, client);
     }
 
     public async Task Stop()
     {
         
+    }
+
+    private void ConnectionSuccessfulHandler(object? o, ConnectionReceivedEventArgs args)
+    {
+        PlaceConnectionInMenu(args.Connection);
+    }
+
+    public void PlaceConnectionInMenu(Connection connection)
+    {
+        serverInterface.PutInMenu(connection);
     }
 }
