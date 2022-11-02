@@ -1,4 +1,8 @@
-﻿using Unnamed_Networking_Plugin;
+﻿using ForwardingServer.Group;
+using ForwardingServer.Resources;
+using Unnamed_Networking_Plugin;
+using Unnamed_Networking_Plugin.Broker;
+using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 
@@ -11,8 +15,14 @@ public class FwServer
     private IJsonSerializer jsonSerializer { get; }
     private IdentificationPackage identificationPackage { get; }
     private Type identificationType { get; }
+    private ServerInterface serverInterface { get; set; }
+    
+    
+    public List<ConnectionGroup> connectionGroups { get; } = new();
     public bool Running { get; private set; }
 
+    
+    
     public FwServer(
         int port, 
         ILogger logger, 
@@ -25,7 +35,7 @@ public class FwServer
         this.identificationPackage = identificationPackage;
         identificationType = identificationPackage.ExtractConnectionInformation().GetType();
     }
-    
+
     public async Task Run()
     {
         if (Running)
@@ -36,6 +46,7 @@ public class FwServer
         
         Running = true;
         var client = new UnnamedNetworkPluginClient(port, logger, jsonSerializer, identificationPackage);
+        serverInterface = new ServerInterface(connectionGroups, client);
     }
 
     public async Task Stop()
