@@ -27,12 +27,47 @@ public class PackageBroker
         listeners[typeof(T)] = onPackageReceived;
     }
 
+    public bool SubscribeToPackage(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived, Type packageType)
+    {
+        if (!packageType.IsSubclassOf(typeof(Package)))
+        {
+            return false;
+        }
+
+        if (listeners.TryGetValue(packageType, out var listener))
+        {
+            listeners[packageType] += onPackageReceived;
+            return true;
+        }
+        listeners[packageType] = onPackageReceived;
+        
+        return true;
+    }
+
     public void UnSubscribeFromPackage<T>(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived) where T : Package
     {
         if (listeners.TryGetValue(typeof(T), out var listener))
         {
             listeners[typeof(T)] -= onPackageReceived;
         }
+    }
+
+    public bool UnSubscribeFromPackage(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived,
+        Type packageType)
+    {
+        if (!packageType.IsSubclassOf(typeof(Package)))
+        {
+            return false;
+        }
+
+        if (!listeners.TryGetValue(packageType, out var listener))
+        {
+            return false;
+        }
+        
+        listeners[packageType] -= onPackageReceived;
+        return true;
+
     }
 
     public void InvokeSubscribers(PackageReceivedEventDetailedArgs packageReceivedEventArgs)
