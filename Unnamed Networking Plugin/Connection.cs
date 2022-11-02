@@ -99,7 +99,7 @@ public class Connection
         // cancellationTokenSource.Cancel();
         // streamReader.Close();
         TcpClient.Close();
-        ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(false));
+        ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(false, ConnectionInformation));
 
         // throw new NotImplementedException();
         // TcpClient.Close();
@@ -156,7 +156,7 @@ public class Connection
                 if (json == null)
                 {
                     logger.Log(this, $"Received json was null, disconnecting...", LogType.HandledError);
-                    ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(true));
+                    ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(true, ConnectionInformation));
                     TcpClient.Close();
                     return;
                 }
@@ -224,9 +224,12 @@ public class ClientDisconnectedEventArgs
 {
     public bool RemoteDisconnected;
     public bool LocalDisconnected => !RemoteDisconnected;
+    
+    public IConnectionInformation ConnectionInformation { get; }
 
-    public ClientDisconnectedEventArgs(bool remoteDisconnected)
+    public ClientDisconnectedEventArgs(bool remoteDisconnected, IConnectionInformation connectionInformation)
     {
         RemoteDisconnected = remoteDisconnected;
+        ConnectionInformation = connectionInformation;
     }
 }

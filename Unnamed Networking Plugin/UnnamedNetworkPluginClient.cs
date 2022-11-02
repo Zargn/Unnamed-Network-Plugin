@@ -43,7 +43,7 @@ public class UnnamedNetworkPluginClient
     /// Invoked when a connection has been lost.
     /// Contains the ConnectionInformation of the client which was lost.
     /// </summary>
-    public event EventHandler<ClientDisconnectedEventDetailedArgs>? ConnectionLost; 
+    public event EventHandler<ClientDisconnectedEventArgs>? ConnectionLost; 
 
     /// <summary>
     /// Constructor and configurator of the client.
@@ -200,7 +200,7 @@ public class UnnamedNetworkPluginClient
         connection.ClientDisconnected += (o, args) =>
         {
             Connections.Remove(connection.ConnectionInformation);
-            ConnectionLost?.Invoke(o, new ClientDisconnectedEventDetailedArgs(args.RemoteDisconnected, connection.ConnectionInformation));
+            ConnectionLost?.Invoke(o, args);
         };
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(connection.ConnectionInformation, connection));
     }
