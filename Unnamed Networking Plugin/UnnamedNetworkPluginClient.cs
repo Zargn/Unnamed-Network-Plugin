@@ -250,4 +250,31 @@ public class UnnamedNetworkPluginClient
         var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendPackage(package)).ToArray();
         await Task.WhenAll(sendTasks);
     }
+
+    /// <summary>
+    /// Warning. This method can send data that is not in the form of packages, and can therefor cause issues for the
+    /// receiver. Only use if you know what you are doing.<br/>
+    /// <br/>
+    /// Tries to send the provided package to the client with provided ConnectionInformation.
+    /// </summary>
+    /// <param name="json">Json to be transmitted.</param>
+    /// <param name="targetConnectionInformation">Target connection information.</param>
+    /// <exception cref="KeyNotFoundException">If there is no connection with matching information.</exception>
+    public async Task SendJson(string? json, IConnectionInformation targetConnectionInformation)
+    {
+        await Connections[targetConnectionInformation].SendJson(json);
+    }
+
+    /// <summary>
+    /// Warning. This method can send data that is not in the form of packages, and can therefor cause issues for the
+    /// receiver. Only use if you know what you are doing.<br/>
+    /// <br/>
+    /// Sends the provided Json to all connected clients. This will run even if there are no clients connected.
+    /// </summary>
+    /// <param name="json">Json to be transmitted.</param>
+    public async Task SendJsonToAllConnections(string? json)
+    {
+        var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendJson(json)).ToArray();
+        await Task.WhenAll(sendTasks);
+    }
 }

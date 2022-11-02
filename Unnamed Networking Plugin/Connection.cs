@@ -123,6 +123,24 @@ public class Connection
         await streamWriter.FlushAsync();
     }
 
+    /// <summary>
+    /// Warning. This method can send data that is not in the form of packages, and can therefor cause issues for the
+    /// receiver. Only use if you know what you are doing.
+    /// </summary>
+    /// <param name="json"></param>
+    public async Task SendJson(string? json)
+    {
+        if (json == null)
+        {
+            logger.Log(this, "Result Json was null", LogType.Warning);
+            return;
+        }
+
+        logger.Log(this, $"Sent pre-made json: {json}", LogType.Information);
+        await streamWriter.WriteLineAsync(json);
+        await streamWriter.FlushAsync();
+    }
+
     // TODO: Does this task need cancellation?
     private async Task PackageListener()
     { 
