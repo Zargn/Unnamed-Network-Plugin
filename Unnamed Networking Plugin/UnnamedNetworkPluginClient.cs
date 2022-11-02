@@ -31,7 +31,7 @@ public class UnnamedNetworkPluginClient
     /// Invoked when a package has been received from any connected client.
     /// Contains the package, package type, and ConnectionInformation of who sent it.
     /// </summary>
-    public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
+    public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
 
     /// <summary>
     /// Invoked on a successful connection.
@@ -195,7 +195,7 @@ public class UnnamedNetworkPluginClient
         Connections.Add(connection.ConnectionInformation, connection);
         connection.PackageReceived += (o, args) =>
         {
-            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, args.PackageType, connection.ConnectionInformation));
+            PackageReceived?.Invoke(o, args);
         };
         connection.ClientDisconnected += (o, args) =>
         {

@@ -187,7 +187,7 @@ public class Connection
                     continue;
                 }
 
-                PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage, objectType));
+                PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage, objectType, ConnectionInformation));
             }
             catch (IOException)
             {
@@ -209,13 +209,15 @@ public class Connection
 /// </summary>
 public class PackageReceivedEventArgs
 {
-    public PackageReceivedEventArgs(IPackage receivedPackage, Type packageType)
+    public PackageReceivedEventArgs(IPackage receivedPackage, Type packageType, IConnectionInformation connectionInformation)
     {
         ReceivedPackage = receivedPackage;
         PackageType = packageType;
+        ConnectionInformation = connectionInformation;
     }
     public IPackage ReceivedPackage { get; }
     public Type PackageType { get; }
+    public IConnectionInformation ConnectionInformation;
 }
 
 public class ClientDisconnectedEventArgs

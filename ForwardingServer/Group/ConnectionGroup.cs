@@ -4,7 +4,6 @@ using Unnamed_Networking_Plugin.Broker;
 using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
-using PackageReceivedEventArgs = Unnamed_Networking_Plugin.EventArgs.PackageReceivedEventArgs;
 
 namespace ForwardingServer.Group;
 
@@ -48,11 +47,12 @@ public class ConnectionGroup
 
     private void SetUpSubscribers()
     {
+        Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
         Broker.SubscribeToPackage(HandleForwardingPackage, forwardingPackageType);
         Broker.SubscribeToPackage<RequestGroupInformationPackage>(HandleRequestGroupInformationPackage);
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
     }
-
+    
     private void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
     {
         var package = args.ReceivedPackage as ForwardingPackage;

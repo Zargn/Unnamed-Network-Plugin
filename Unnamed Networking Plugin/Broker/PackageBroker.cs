@@ -7,8 +7,8 @@ namespace Unnamed_Networking_Plugin.Broker;
 public class PackageBroker
 {
     // private Action<IBrokerPackage>[] listeners;
-    private readonly Dictionary<Type, EventHandler<PackageReceivedEventDetailedArgs>?> listeners = new();
-    public EventHandler<PackageReceivedEventDetailedArgs>? PackageWithNoSubscribersReceived;
+    private readonly Dictionary<Type, EventHandler<PackageReceivedEventArgs>?> listeners = new();
+    public EventHandler<PackageReceivedEventArgs>? PackageWithNoSubscribersReceived;
 
     // public static void ConfigureBrokerPackageIds(IEnumerable<IBrokerPackage> brokerPackages)
     // {
@@ -17,7 +17,7 @@ public class PackageBroker
     
     // TODO. Look into making this class more efficient.
 
-    public void SubscribeToPackage<T>(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived) where T : Package
+    public void SubscribeToPackage<T>(EventHandler<PackageReceivedEventArgs> onPackageReceived) where T : Package
     {
         if (listeners.TryGetValue(typeof(T), out var listener))
         {
@@ -27,7 +27,7 @@ public class PackageBroker
         listeners[typeof(T)] = onPackageReceived;
     }
 
-    public bool SubscribeToPackage(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived, Type packageType)
+    public bool SubscribeToPackage(EventHandler<PackageReceivedEventArgs> onPackageReceived, Type packageType)
     {
         if (!packageType.IsSubclassOf(typeof(Package)))
         {
@@ -44,7 +44,7 @@ public class PackageBroker
         return true;
     }
 
-    public void UnSubscribeFromPackage<T>(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived) where T : Package
+    public void UnSubscribeFromPackage<T>(EventHandler<PackageReceivedEventArgs> onPackageReceived) where T : Package
     {
         if (listeners.TryGetValue(typeof(T), out var listener))
         {
@@ -52,7 +52,7 @@ public class PackageBroker
         }
     }
 
-    public bool UnSubscribeFromPackage(EventHandler<PackageReceivedEventDetailedArgs> onPackageReceived,
+    public bool UnSubscribeFromPackage(EventHandler<PackageReceivedEventArgs> onPackageReceived,
         Type packageType)
     {
         if (!packageType.IsSubclassOf(typeof(Package)))
@@ -70,7 +70,7 @@ public class PackageBroker
 
     }
 
-    public void InvokeSubscribers(PackageReceivedEventDetailedArgs packageReceivedEventArgs)
+    public void InvokeSubscribers(PackageReceivedEventArgs packageReceivedEventArgs)
     {
         if (listeners.TryGetValue(packageReceivedEventArgs.PackageType, out var listener))
         {

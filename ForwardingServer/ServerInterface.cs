@@ -4,7 +4,6 @@ using ForwardingServer.Resources;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Resources;
-using PackageReceivedEventArgs = Unnamed_Networking_Plugin.EventArgs.PackageReceivedEventArgs;
 
 namespace ForwardingServer;
 
