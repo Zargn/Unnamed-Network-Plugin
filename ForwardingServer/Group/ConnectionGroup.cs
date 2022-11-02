@@ -4,6 +4,7 @@ using Unnamed_Networking_Plugin.Broker;
 using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
+using PackageReceivedEventArgs = Unnamed_Networking_Plugin.EventArgs.PackageReceivedEventArgs;
 
 namespace ForwardingServer.Group;
 
@@ -26,6 +27,8 @@ public class ConnectionGroup
         this.groupSettings = groupSettings;
         this.forwardingPackageType = forwardingPackageType;
         this.client = client;
+
+        SetUpSubscribers();
     }
 
     public bool Join(Connection connection)
@@ -50,25 +53,26 @@ public class ConnectionGroup
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
     }
 
-    private void HandleForwardingPackage(object? o, PackageReceivedEventDetailedArgs args)
+    private void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
     {
         var package = args.ReceivedPackage as ForwardingPackage;
         var targetInfo = package.TargetInformation as IConnectionInformation;
-        
+
         // Todo: Send package.PackageJson to targetInfo
+        client.SendJson(package.PackageJson, targetInfo);
     }
 
-    private void ForwardPackageToAll(object? o, PackageReceivedEventDetailedArgs args)
+    private void ForwardPackageToAll(object? o, PackageReceivedEventArgs args)
     {
         
     }
 
-    private void HandleRequestGroupInformationPackage(object? o, PackageReceivedEventDetailedArgs args)
+    private void HandleRequestGroupInformationPackage(object? o, PackageReceivedEventArgs args)
     {
         
     }
 
-    private void HandleLeaveGroupPackage(object? o, PackageReceivedEventDetailedArgs args)
+    private void HandleLeaveGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         
     }
