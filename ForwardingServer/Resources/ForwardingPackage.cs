@@ -7,14 +7,13 @@ namespace ForwardingServer;
 /// Forwarding Package class. Wraps a pre-made json string in a package together with targetInformation for the
 /// destination.
 /// </summary>
-/// <typeparam name="T">IConnectionInformation type.</typeparam>
-public class ForwardingPackage<T> : Package where T : IConnectionInformation
+public class ForwardingPackage : Package
 {
-    public T TargetInformation { get; init; }
+    public object TargetInformation { get; init; }
     
     public string PackageJson { get; init; }
     
-    public ForwardingPackage(string packageJson, T targetInformation)
+    public ForwardingPackage(string packageJson, object targetInformation)
     {
         PackageJson = packageJson;
         TargetInformation = targetInformation;
