@@ -1,27 +1,26 @@
-﻿using System.Text.RegularExpressions;
-using ForwardingServer.Group;
+﻿using ForwardingServer.Group;
 using ForwardingServer.Resources;
 using ForwardingServer.Resources.CommandPackages;
 using ForwardingServer.Resources.InformationPackages;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Broker;
-using Unnamed_Networking_Plugin.EventArgs;
-using Unnamed_Networking_Plugin.Resources;
+
+
 
 namespace ForwardingServer;
 
 public class ServerInterface
 {
-    // private List<ConnectionGroup> connectionGroups;
     private Dictionary<GroupSettings, ConnectionGroup> connectionGroups = new();
     private UnnamedNetworkPluginClient client;
+    private FwServer FwServer { get; }
     private PackageBroker Broker { get; } = new();
 
 
-    public ServerInterface(UnnamedNetworkPluginClient client)
+    public ServerInterface(UnnamedNetworkPluginClient client, FwServer fwServer)
     {
-        // this.connectionGroups = connectionGroups;
         this.client = client;
+        FwServer = fwServer;
 
         SetUpSubscribers();
     }
@@ -62,14 +61,28 @@ public class ServerInterface
 
     private async void HandleCreateGroupPackage(object? o, PackageReceivedEventArgs args)
     {
-        await client.SendPackage(new RequestGroupSettingsPackage(), args.ConnectionInformation);
+        var connection = client.GetConnectionFromList(args.ConnectionInformation);
+
+        var package = args.ReceivedPackage as CreateGroupPackage;
+
+        var settings = package.GroupSettings;
+
+        if (connectionGroups.ContainsKey(settings))
+        {
+            string warningMessage = "Provided group settings match a already existing group.";
+            var warningPackage = new WarningPackage(warningMessage, WarningType.GroupAlreadyExists);
+            await connection.SendPackage(warningPackage);
+            return;
+        }
+
+        var newGroup = new ConnectionGroup(package.GroupSettings, client, FwServer);
         
-        
-        
-        // TODO: Finish this....
-        
-        
-        
+        var joinGroupTask = newGroup.Join(connection);
+
+        connectionGroups[settings] = newGroup;
+        RemoveFromMenu(connection);
+
+        await joinGroupTask;
     }
 
     private async void HandleJoinGroupPackage(object? o, PackageReceivedEventArgs args)
@@ -78,8 +91,7 @@ public class ServerInterface
         RemoveFromMenu(connection);
 
         var package = args.ReceivedPackage as JoinGroupPackage;
-
-        // Todo: Get group with matching package.TargetGroupInformation then attempt to join.
+        
         try
         {
             var targetGroup = connectionGroups[package.TargetGroupInformation.GroupSettings];
@@ -100,6 +112,5 @@ public class ServerInterface
             await connection.SendPackage(warningPackage);
             throw;
         }
-        
     }
 }
