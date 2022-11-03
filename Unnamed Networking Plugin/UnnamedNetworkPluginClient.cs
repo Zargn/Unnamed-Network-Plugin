@@ -31,7 +31,7 @@ public class UnnamedNetworkPluginClient
     /// Invoked when a package has been received from any connected client.
     /// Contains the package, package type, and ConnectionInformation of who sent it.
     /// </summary>
-    public event EventHandler<PackageReceivedEventDetailedArgs>? PackageReceived;
+    public event EventHandler<PackageReceivedEventArgs>? PackageReceived;
 
     /// <summary>
     /// Invoked on a successful connection.
@@ -43,7 +43,7 @@ public class UnnamedNetworkPluginClient
     /// Invoked when a connection has been lost.
     /// Contains the ConnectionInformation of the client which was lost.
     /// </summary>
-    public event EventHandler<ClientDisconnectedEventDetailedArgs>? ConnectionLost; 
+    public event EventHandler<ClientDisconnectedEventArgs>? ConnectionLost; 
 
     /// <summary>
     /// Constructor and configurator of the client.
@@ -195,12 +195,12 @@ public class UnnamedNetworkPluginClient
         Connections.Add(connection.ConnectionInformation, connection);
         connection.PackageReceived += (o, args) =>
         {
-            PackageReceived?.Invoke(o, new PackageReceivedEventDetailedArgs(args.ReceivedPackage, args.PackageType, connection.ConnectionInformation));
+            PackageReceived?.Invoke(o, args);
         };
         connection.ClientDisconnected += (o, args) =>
         {
             Connections.Remove(connection.ConnectionInformation);
-            ConnectionLost?.Invoke(o, new ClientDisconnectedEventDetailedArgs(args.RemoteDisconnected, connection.ConnectionInformation));
+            ConnectionLost?.Invoke(o, args);
         };
         ConnectionSuccessful?.Invoke(this, new ConnectionReceivedEventArgs(connection.ConnectionInformation, connection));
     }
@@ -248,6 +248,33 @@ public class UnnamedNetworkPluginClient
     where T : IPackage
     {
         var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendPackage(package)).ToArray();
+        await Task.WhenAll(sendTasks);
+    }
+
+    /// <summary>
+    /// Warning. This method can send data that is not in the form of packages, and can therefor cause issues for the
+    /// receiver. Only use if you know what you are doing.<br/>
+    /// <br/>
+    /// Tries to send the provided package to the client with provided ConnectionInformation.
+    /// </summary>
+    /// <param name="json">Json to be transmitted.</param>
+    /// <param name="targetConnectionInformation">Target connection information.</param>
+    /// <exception cref="KeyNotFoundException">If there is no connection with matching information.</exception>
+    public async Task SendJson(string? json, IConnectionInformation targetConnectionInformation)
+    {
+        await Connections[targetConnectionInformation].SendJson(json);
+    }
+
+    /// <summary>
+    /// Warning. This method can send data that is not in the form of packages, and can therefor cause issues for the
+    /// receiver. Only use if you know what you are doing.<br/>
+    /// <br/>
+    /// Sends the provided Json to all connected clients. This will run even if there are no clients connected.
+    /// </summary>
+    /// <param name="json">Json to be transmitted.</param>
+    public async Task SendJsonToAllConnections(string? json)
+    {
+        var sendTasks = Connections.Select(connectionEntry => connectionEntry.Value.SendJson(json)).ToArray();
         await Task.WhenAll(sendTasks);
     }
 }

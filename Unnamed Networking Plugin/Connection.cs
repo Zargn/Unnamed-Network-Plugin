@@ -99,7 +99,7 @@ public class Connection
         // cancellationTokenSource.Cancel();
         // streamReader.Close();
         TcpClient.Close();
-        ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(false));
+        ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(false, ConnectionInformation, this));
 
         // throw new NotImplementedException();
         // TcpClient.Close();
@@ -123,6 +123,24 @@ public class Connection
         await streamWriter.FlushAsync();
     }
 
+    /// <summary>
+    /// Warning. This method can send data that is not in the form of packages, and can therefor cause issues for the
+    /// receiver. Only use if you know what you are doing.
+    /// </summary>
+    /// <param name="json"></param>
+    public async Task SendJson(string? json)
+    {
+        if (json == null)
+        {
+            logger.Log(this, "Result Json was null", LogType.Warning);
+            return;
+        }
+
+        logger.Log(this, $"Sent pre-made json: {json}", LogType.Information);
+        await streamWriter.WriteLineAsync(json);
+        await streamWriter.FlushAsync();
+    }
+
     // TODO: Does this task need cancellation?
     private async Task PackageListener()
     { 
@@ -138,7 +156,7 @@ public class Connection
                 if (json == null)
                 {
                     logger.Log(this, $"Received json was null, disconnecting...", LogType.HandledError);
-                    ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(true));
+                    ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(true, ConnectionInformation, this));
                     TcpClient.Close();
                     return;
                 }
@@ -169,7 +187,7 @@ public class Connection
                     continue;
                 }
 
-                PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage, objectType));
+                PackageReceived?.Invoke(this, new PackageReceivedEventArgs(resultPackage, objectType, ConnectionInformation));
             }
             catch (IOException)
             {
@@ -191,22 +209,33 @@ public class Connection
 /// </summary>
 public class PackageReceivedEventArgs
 {
-    public PackageReceivedEventArgs(IPackage receivedPackage, Type packageType)
+    public PackageReceivedEventArgs(IPackage receivedPackage, Type packageType, IConnectionInformation connectionInformation)
     {
         ReceivedPackage = receivedPackage;
         PackageType = packageType;
+        ConnectionInformation = connectionInformation;
     }
     public IPackage ReceivedPackage { get; }
     public Type PackageType { get; }
+    public IConnectionInformation ConnectionInformation;
 }
 
 public class ClientDisconnectedEventArgs
 {
     public bool RemoteDisconnected;
     public bool LocalDisconnected => !RemoteDisconnected;
+    
+    /// <summary>
+    /// Will probably be removed at some point since it can be accessed from the provided connection.
+    /// </summary>
+    public IConnectionInformation ConnectionInformation { get; }
+    
+    public Connection Connection { get; }
 
-    public ClientDisconnectedEventArgs(bool remoteDisconnected)
+    public ClientDisconnectedEventArgs(bool remoteDisconnected, IConnectionInformation connectionInformation, Connection connection)
     {
         RemoteDisconnected = remoteDisconnected;
+        ConnectionInformation = connectionInformation;
+        Connection = connection;
     }
 }

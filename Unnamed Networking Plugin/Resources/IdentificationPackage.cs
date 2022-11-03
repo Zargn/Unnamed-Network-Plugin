@@ -4,5 +4,5 @@ namespace Unnamed_Networking_Plugin.Resources;
 
 public abstract class IdentificationPackage : Package
 {
-    public abstract IConnectionInformation? ExtractConnectionInformation();
+    public abstract IConnectionInformation ExtractConnectionInformation();
 }
