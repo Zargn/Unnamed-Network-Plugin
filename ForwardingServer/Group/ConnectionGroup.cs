@@ -32,15 +32,19 @@ public class ConnectionGroup
         SetUpSubscribers();
     }
 
-    public bool Join(Connection connection)
+    public async Task<bool> Join(Connection connection)
     {
         if (MemberCount >= groupSettings.MaxSize)
             return false;
-        
+
+        var sendPackageTask = connection.SendPackage(new InGroupPackage());
+
         connection.PackageReceived += Broker.InvokeSubscribers;
         connection.ClientDisconnected += HandleClientDisconnected;
 
         members.Add(connection);
+
+        await sendPackageTask;
         
         return true;
     }
