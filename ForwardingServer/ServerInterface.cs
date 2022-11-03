@@ -1,6 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 using ForwardingServer.Group;
 using ForwardingServer.Resources;
+using ForwardingServer.Resources.CommandPackages;
+using ForwardingServer.Resources.InformationPackages;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Resources;

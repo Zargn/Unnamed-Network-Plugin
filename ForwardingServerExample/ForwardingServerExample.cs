@@ -1,5 +1,4 @@
 ﻿using ForwardingServer;
-using ForwardingServer.Group.Resources;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 

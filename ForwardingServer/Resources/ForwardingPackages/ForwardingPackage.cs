@@ -1,7 +1,6 @@
-﻿using Unnamed_Networking_Plugin.Interfaces;
-using Unnamed_Networking_Plugin.Resources;
+﻿using Unnamed_Networking_Plugin.Resources;
 
-namespace ForwardingServer;
+namespace ForwardingServer.Resources.ForwardingPackages;
 
 /// <summary>
 /// Forwarding Package class. Wraps a pre-made json string in a package together with targetInformation for the
