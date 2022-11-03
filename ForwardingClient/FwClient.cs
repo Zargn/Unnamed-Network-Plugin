@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using ForwardingClient.Resources;
 using Unnamed_Networking_Plugin;
+using Unnamed_Networking_Plugin.Broker;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 
@@ -18,7 +19,11 @@ public class FwClient
     private bool inMenu;
     
     public bool Connected { get; private set; }
-    
+    public PackageBroker PackageBroker { get; }
+
+    public event EventHandler? ClientDisconnected;
+    public event EventHandler? ClientConnected;
+
     // TODO: This class doesn't really need the entire UnnamedNetworkPluginClient. If we move the authentication
     // to Connection.cs then we should be able to only use one Connection instance for everything.
     
@@ -28,6 +33,7 @@ public class FwClient
         Logger = logger;
         JsonSerializer = jsonSerializer;
         IdentificationPackage = identificationPackage;
+        PackageBroker = new PackageBroker();
     }
     
     
