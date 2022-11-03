@@ -1,3 +1,3 @@
 ﻿namespace ForwardingServer;
 
-public record GroupInformation(int MaxSize, string Title, string Description, int MemberCount);
+public record GroupInformation(GroupSettings GroupSettings, int MemberCount);

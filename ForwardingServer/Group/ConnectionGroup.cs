@@ -11,9 +11,7 @@ namespace ForwardingServer.Group;
 
 public class ConnectionGroup
 {
-    public GroupInformation GroupInformation => new GroupInformation(
-        groupSettings.MaxSize, groupSettings.Title,
-        groupSettings.Description, MemberCount);
+    public GroupInformation GroupInformation => new(groupSettings, MemberCount);
     public PackageBroker Broker { get; } = new();
     public int MemberCount => members.Count;
     
