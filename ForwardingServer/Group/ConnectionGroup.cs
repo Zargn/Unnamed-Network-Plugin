@@ -1,5 +1,6 @@
 ﻿using ForwardingServer.Resources.CommandPackages;
 using ForwardingServer.Resources.ForwardingPackages;
+using ForwardingServer.Resources.InformationPackages;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Broker;
 using Unnamed_Networking_Plugin.EventArgs;
@@ -38,8 +39,6 @@ public class ConnectionGroup
         if (MemberCount >= groupSettings.MaxSize)
             return false;
         
-        
-        
         connection.PackageReceived += Broker.InvokeSubscribers;
         connection.ClientDisconnected += HandleClientDisconnected;
 
@@ -48,7 +47,7 @@ public class ConnectionGroup
         return true;
     }
 
-    public void LeaveGroup(Connection connection)
+    public void Leave(Connection connection)
     {
         connection.PackageReceived -= Broker.InvokeSubscribers;
         connection.ClientDisconnected -= HandleClientDisconnected;
@@ -59,7 +58,8 @@ public class ConnectionGroup
     private void SetUpSubscribers()
     {
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
-        Broker.SubscribeToPackage(HandleForwardingPackage, forwardingPackageType);
+        Broker.SubscribeToPackage<ForwardingPackage>(HandleForwardingPackage);
+        Broker.SubscribeToPackage<ForwardingPackageAll>(HandleForwardingPackageAll);
         Broker.SubscribeToPackage<RequestGroupInformationPackage>(HandleRequestGroupInformationPackage);
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
     }
@@ -67,33 +67,34 @@ public class ConnectionGroup
     private void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
-        LeaveGroup(connection);
+        Leave(connection);
     }
     
-    private void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
+    private async void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
     {
         var package = args.ReceivedPackage as ForwardingPackage;
         var targetInfo = package.TargetInformation as IConnectionInformation;
-
-        // Todo: Send package.PackageJson to targetInfo
-        var sendJsonTask = client.SendJson(package.PackageJson, targetInfo);
-        sendJsonTask.Wait();
+        
+        await client.SendJson(package.PackageJson, targetInfo);
     }
 
-    private void ForwardPackageToAll(object? o, PackageReceivedEventArgs args)
+    private async void HandleForwardingPackageAll(object? o, PackageReceivedEventArgs args)
     {
-        
+        var package = args.ReceivedPackage as ForwardingPackageAll;
+
+        await client.SendJsonToAllConnections(package.PackageJson);
     }
 
-    private void HandleRequestGroupInformationPackage(object? o, PackageReceivedEventArgs args)
+    private async void HandleRequestGroupInformationPackage(object? o, PackageReceivedEventArgs args)
     {
-        
+        var connection = client.GetConnectionFromList(args.ConnectionInformation);
+        await connection.SendPackage(new GroupInformationPackage(GroupInformation));
     }
 
     private void HandleLeaveGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
-        LeaveGroup(connection);
+        Leave(connection);
         fwServer.PlaceConnectionInMenu(connection);
     }
 }
