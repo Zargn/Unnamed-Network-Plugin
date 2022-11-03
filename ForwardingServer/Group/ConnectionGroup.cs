@@ -66,7 +66,7 @@ public class ConnectionGroup
 
     private void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
     {
-        var connection = client.GetConnectionFromList(args.ConnectionInformation);
+        var connection = args.Connection;
         Leave(connection);
     }
     
