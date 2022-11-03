@@ -56,7 +56,6 @@ public class ConnectionGroup
 
     private void SetUpSubscribers()
     {
-        Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
         Broker.SubscribeToPackage<ForwardingPackage>(HandleForwardingPackage);
         Broker.SubscribeToPackage<ForwardingPackageAll>(HandleForwardingPackageAll);
         Broker.SubscribeToPackage<RequestGroupInformationPackage>(HandleRequestGroupInformationPackage);
