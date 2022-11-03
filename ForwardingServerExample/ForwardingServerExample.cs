@@ -1,4 +1,5 @@
-﻿using ForwardingServer;
+﻿using System.Data;
+using ForwardingServer;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 
@@ -19,12 +20,20 @@ public class ForwardingServerExample
         // var mfwp = fwp2 as ForwardingPackage;
         // var username = mfwp.TargetInformation.ToString();
         // Console.WriteLine(username);
+        
+        // Temp();
 
         var server = new ForwardingServerExample();
-        var task = server.StartServer();
-        task.Wait();
+        server.StartServer().GetAwaiter().GetResult();
+        // task.Wait();
     }
-
+    
+    // private static async void Temp()
+    // {
+    //     await Task.Delay(1000);
+    //     var n = Int32.Parse("nr21");
+    // }
+    
     private async Task StartServer()
     {
         var identification = new UserIdentification("ForwardingServer");
@@ -40,6 +49,7 @@ public class ForwardingServerExample
             Console.WriteLine("Write Q to quit.");
             var result = Console.ReadLine();
             if (result.ToLower() != "q") continue;
+            Console.WriteLine("Quitting...");
             await forwardingServer.Stop();
             return;
         }
