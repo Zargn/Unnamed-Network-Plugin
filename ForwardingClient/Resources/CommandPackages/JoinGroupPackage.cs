@@ -4,10 +4,10 @@ namespace ForwardingClient.Resources.CommandPackages;
 
 public class JoinGroupPackage : Package
 {
-    public GroupInformation TargetGroupInformation { get; init; }
+    public GroupSettings TargetGroupSettings { get; init; }
     
-    public JoinGroupPackage(GroupInformation targetGroupInformation)
+    public JoinGroupPackage(GroupSettings targetGroupSettings)
     {
-        TargetGroupInformation = targetGroupInformation;
+        TargetGroupSettings = targetGroupSettings;
     }
 }

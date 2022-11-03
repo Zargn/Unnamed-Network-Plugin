@@ -94,7 +94,7 @@ public class ServerInterface
         
         try
         {
-            var targetGroup = connectionGroups[package.TargetGroupInformation.GroupSettings];
+            var targetGroup = connectionGroups[package.TargetGroupSettings];
             if (await targetGroup.Join(connection))
             {
                 RemoveFromMenu(connection);
