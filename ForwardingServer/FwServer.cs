@@ -1,7 +1,4 @@
-﻿using ForwardingServer.Group;
-using ForwardingServer.Resources;
-using Unnamed_Networking_Plugin;
-using Unnamed_Networking_Plugin.Broker;
+﻿using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
@@ -16,9 +13,8 @@ public class FwServer
     private IdentificationPackage identificationPackage { get; }
     private Type identificationType { get; }
     private ServerInterface serverInterface { get; set; }
+    private UnnamedNetworkPluginClient client { get; set; }
     
-    
-    // public List<ConnectionGroup> connectionGroups { get; } = new();
     public bool Running { get; private set; }
 
     
@@ -36,6 +32,7 @@ public class FwServer
         identificationType = identificationPackage.ExtractConnectionInformation().GetType();
     }
 
+    // TODO: This is strangely empty.
     public async Task Run()
     {
         if (Running)
@@ -45,18 +42,16 @@ public class FwServer
         }
         
         Running = true;
-        var client = new UnnamedNetworkPluginClient(port, logger, jsonSerializer, identificationPackage);
+        client = new UnnamedNetworkPluginClient(port, logger, jsonSerializer, identificationPackage);
 
         client.ConnectionSuccessful += ConnectionSuccessfulHandler;
         
-        serverInterface = new ServerInterface(client);
-        
-        
+        serverInterface = new ServerInterface(client, this);
     }
 
     public async Task Stop()
     {
-        
+        await client.StopListener();
     }
 
     private void ConnectionSuccessfulHandler(object? o, ConnectionReceivedEventArgs args)
@@ -64,8 +59,8 @@ public class FwServer
         PlaceConnectionInMenu(args.Connection);
     }
 
-    public void PlaceConnectionInMenu(Connection connection)
+    public async void PlaceConnectionInMenu(Connection connection)
     {
-        serverInterface.PutInMenu(connection);
+        await serverInterface.PutInMenu(connection);
     }
 }
