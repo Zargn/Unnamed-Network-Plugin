@@ -80,7 +80,8 @@ public class ConnectionGroup
     {
         var package = args.ReceivedPackage as ForwardingPackageAll;
 
-        await client.SendJsonToAllConnections(package.PackageJson);
+        List<Task> sendTasks = members.Select(connection => connection.SendJson(package.PackageJson)).ToList();
+        await Task.WhenAll(sendTasks);
     }
 
     private async void HandleRequestGroupInformationPackage(object? o, PackageReceivedEventArgs args)
