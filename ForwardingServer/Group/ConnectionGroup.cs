@@ -3,9 +3,9 @@ using ForwardingServer.Resources.ForwardingPackages;
 using ForwardingServer.Resources.InformationPackages;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Broker;
-using Unnamed_Networking_Plugin.EventArgs;
 using Unnamed_Networking_Plugin.Interfaces;
-using Unnamed_Networking_Plugin.Resources;
+
+
 
 namespace ForwardingServer.Group;
 
@@ -17,15 +17,12 @@ public class ConnectionGroup
     
     private readonly GroupSettings groupSettings;
     private List<Connection> members = new();
-    private IdentificationPackage package;
-    private Type forwardingPackageType;
     private UnnamedNetworkPluginClient client;
     private FwServer fwServer;
 
-    public ConnectionGroup(GroupSettings groupSettings, Type forwardingPackageType, UnnamedNetworkPluginClient client, FwServer fwServer)
+    public ConnectionGroup(GroupSettings groupSettings, UnnamedNetworkPluginClient client, FwServer fwServer)
     {
         this.groupSettings = groupSettings;
-        this.forwardingPackageType = forwardingPackageType;
         this.client = client;
         this.fwServer = fwServer;
 
