@@ -18,7 +18,7 @@ public class FwServer
     private ServerInterface serverInterface { get; set; }
     
     
-    public List<ConnectionGroup> connectionGroups { get; } = new();
+    // public List<ConnectionGroup> connectionGroups { get; } = new();
     public bool Running { get; private set; }
 
     
@@ -49,7 +49,9 @@ public class FwServer
 
         client.ConnectionSuccessful += ConnectionSuccessfulHandler;
         
-        serverInterface = new ServerInterface(connectionGroups, client);
+        serverInterface = new ServerInterface(client);
+        
+        
     }
 
     public async Task Stop()
