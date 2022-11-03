@@ -17,4 +17,6 @@ public class WarningPackage : Package
 public enum WarningType
 {
     GroupFull,
+    GroupNotFound,
+    ClientNotFound,
 }
