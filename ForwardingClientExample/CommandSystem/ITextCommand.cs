@@ -6,6 +6,11 @@ public interface ITextCommand
     /// Command name.
     /// </summary>
     public string CommandName { get; }
+ 
+    /// <summary>
+    /// Command syntax including format of arguemnts.
+    /// </summary>
+    public string Syntax { get; }
 
     /// <summary>
     /// Execute the command.
