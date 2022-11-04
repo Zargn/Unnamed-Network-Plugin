@@ -2,6 +2,7 @@
 using ForwardingClient;
 using ForwardingClientExample.Commands;
 using ForwardingClientExample.CommandSystem;
+using ForwardingServerExampleShared;
 
 namespace ForwardingClientExample;
 

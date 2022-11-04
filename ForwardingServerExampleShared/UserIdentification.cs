@@ -1,7 +1,7 @@
 ﻿using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 
-namespace ForwardingClientExample;
+namespace ForwardingServerExampleShared;
 
 public class UserIdentificationPackage : IdentificationPackage
 {

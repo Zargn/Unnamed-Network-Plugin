@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\ForwardingClient\ForwardingClient.csproj" />
+      <ProjectReference Include="..\ForwardingServer\ForwardingServer.csproj" />
+    </ItemGroup>
+
 </Project>

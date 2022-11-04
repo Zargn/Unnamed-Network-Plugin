@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using ForwardingServer;
+using ForwardingServerExampleShared;
 using Unnamed_Networking_Plugin.Interfaces;
 using Unnamed_Networking_Plugin.Resources;
 
