@@ -4,7 +4,7 @@ using ForwardingServer.Resources.InformationPackages;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Broker;
 using Unnamed_Networking_Plugin.Interfaces;
-
+using Unnamed_Networking_Plugin.Resources;
 
 
 namespace ForwardingServer.Group;
@@ -43,15 +43,25 @@ public class ConnectionGroup
 
         await sendPackageTask;
         
+        await SendPackageToEveryoneInGroup(new ClientJoinedGroupPackage(connection.ConnectionInformation));
+        
         return true;
     }
 
-    public void Leave(Connection connection)
+    public async Task Leave(Connection connection)
     {
         connection.PackageReceived -= Broker.InvokeSubscribers;
         connection.ClientDisconnected -= HandleClientDisconnected;
-
+        
         members.Remove(connection);
+        
+        await SendPackageToEveryoneInGroup(new ClientLeftGroupPackage(connection.ConnectionInformation));
+    }
+
+    private async Task SendPackageToEveryoneInGroup(Package package)
+    {
+        List<Task> sendTasks = members.Select(connection => connection.SendPackage(package)).ToList();
+        await Task.WhenAll(sendTasks);
     }
 
     private void SetUpSubscribers()
@@ -62,10 +72,10 @@ public class ConnectionGroup
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
     }
 
-    private void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
+    private async void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
     {
         var connection = args.Connection;
-        Leave(connection);
+        await Leave(connection);
     }
     
     private async void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
@@ -90,10 +100,10 @@ public class ConnectionGroup
         await connection.SendPackage(new GroupInformationPackage(GroupInformation));
     }
 
-    private void HandleLeaveGroupPackage(object? o, PackageReceivedEventArgs args)
+    private async void HandleLeaveGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
-        Leave(connection);
+        await Leave(connection);
         fwServer.PlaceConnectionInMenu(connection);
     }
 }
