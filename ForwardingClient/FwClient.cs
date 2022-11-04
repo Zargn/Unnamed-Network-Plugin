@@ -21,9 +21,10 @@ public class FwClient
     private IdentificationPackage IdentificationPackage { get; }
     private UnnamedNetworkPluginClient Client { get; set; }
     private Connection Connection { get; set; }
-    private bool inMenu;
-    
+
     public bool Connected { get; private set; }
+    public bool InMenu { get; private set; }
+    public bool InGroup { get; private set; }
     public PackageBroker PackageBroker { get; }
 
     public event EventHandler? ClientDisconnected;
@@ -38,6 +39,9 @@ public class FwClient
         JsonSerializer = jsonSerializer;
         IdentificationPackage = identificationPackage;
         PackageBroker = new PackageBroker();
+        
+        PackageBroker.SubscribeToPackage<InGroupPackage>(HandleInGroupPackage);
+        PackageBroker.SubscribeToPackage<InMenuPackage>(HandleInMenuPackage);
     }
 
 
@@ -45,6 +49,11 @@ public class FwClient
     public async Task<bool> ConnectAsync(IPAddress ipAddress, int port)
     {
         // throw new NotImplementedException();
+        if (Connected)
+        {
+            Logger.Log(this, $"Client is already connected. Please call disconnect before calling connect again.", LogType.Warning);
+            return false;
+        }
 
         Client = new UnnamedNetworkPluginClient(port, Logger, JsonSerializer, IdentificationPackage);
         
@@ -54,11 +63,14 @@ public class FwClient
         Client.ConnectionSuccessful += HandleConnectionSuccessful;
 
         var connectTask = Client.AddConnection(ipAddress, port);
+        await stopListenerTask;
         return await connectTask;
     }
 
     private void HandleConnectionSuccessful(object? o, ConnectionReceivedEventArgs args)
     {
+        Connected = true;
+        
         args.Connection.PackageReceived += PackageBroker.InvokeSubscribers;
         args.Connection.ClientDisconnected += HandleClientDisconnected;
 
@@ -67,8 +79,23 @@ public class FwClient
 
     private void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
     {
-        
+        InGroup = false;
+        InMenu = false;
+        Connected = false;
     }
+
+    private void HandleInGroupPackage(object? o, PackageReceivedEventArgs args)
+    {
+        InGroup = true;
+        InMenu = false;
+    }
+    
+    private void HandleInMenuPackage(object? o, PackageReceivedEventArgs args)
+    {
+        InMenu = true;
+        InGroup = false;
+    }
+    
 
     
     
