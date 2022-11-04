@@ -1,4 +1,5 @@
-﻿using Unnamed_Networking_Plugin.Resources;
+﻿using Unnamed_Networking_Plugin.Interfaces;
+using Unnamed_Networking_Plugin.Resources;
 
 namespace ForwardingClient.Resources.ForwardingPackages;
 
@@ -12,7 +13,7 @@ public class ForwardingPackage : Package
     
     public string PackageJson { get; init; }
     
-    public ForwardingPackage(string packageJson, object targetInformation)
+    public ForwardingPackage(string packageJson, IConnectionInformation targetInformation)
     {
         PackageJson = packageJson;
         TargetInformation = targetInformation;
