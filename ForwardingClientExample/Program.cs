@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.Design;
-using ForwardingClient;
+﻿using ForwardingClient;
 using ForwardingClientExample.Commands;
 using ForwardingClientExample.CommandSystem;
 using ForwardingServerExampleShared;
@@ -26,6 +25,13 @@ public class Program
         // Create a / based command system where /COMMAND is used to trigger special events.
 
         // Any regular non-command message should be forwarded to all clients in the current group.
+    }
+
+    public enum ConnectionState
+    {
+        Disconnected,
+        ConnectedInMenu,
+        ConnectedInGroup
     }
 
     public void Run(string username)
