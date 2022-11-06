@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ForwardingClient\ForwardingClient.csproj" />
       <ProjectReference Include="..\ForwardingServerExampleShared\ForwardingServerExampleShared.csproj" />
       <ProjectReference Include="..\ForwardingServerExample\ForwardingServerExample.csproj" />
     </ItemGroup>
