@@ -78,6 +78,8 @@ public class FwClient
         args.Connection.ClientDisconnected += HandleClientDisconnected;
 
         Connection = args.Connection;
+        
+        ClientConnected?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleClientDisconnected(object? o, ClientDisconnectedEventArgs args)
@@ -85,6 +87,7 @@ public class FwClient
         InGroup = false;
         InMenu = false;
         Connected = false;
+        ClientDisconnected?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleInGroupPackage(object? o, PackageReceivedEventArgs args)
