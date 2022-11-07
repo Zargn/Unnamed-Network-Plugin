@@ -63,6 +63,26 @@ public class UnnamedNetworkPluginClient
         listener = new Listener(this, port, logger);
         listener.Start();
     }
+    
+    
+    /// <summary>
+    /// Constructor and configurator of the client.
+    /// </summary>
+    /// <param name="logger">ILogger implementer to handle logging.</param>
+    /// <param name="jsonSerializer">IJsonSerializer implementer to handle serialization.</param>
+    /// <param name="identificationPackage">The identification package for this client.</param>
+    public UnnamedNetworkPluginClient(ILogger logger, IJsonSerializer jsonSerializer, IdentificationPackage identificationPackage)
+    {
+        this.port = port;
+        this.logger = logger;
+        this.jsonSerializer = jsonSerializer;
+        this.identificationPackage = identificationPackage;
+        
+        connectionIdentificationType = identificationPackage.GetType();
+        listener = new Listener(this, port, logger);
+        // listener.Start();
+    }
+    
 
     // TODO: Look into a way to do this automatically when the user has discarded this object.
     /// <summary>
