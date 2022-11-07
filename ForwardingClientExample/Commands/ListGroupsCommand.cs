@@ -18,8 +18,7 @@ public class ListGroupsCommand : ITextCommand
     public string? Execute(string commandString)
     {
         fwClient.PoolTask(fwClient.SendListGroupsRequest());
-
-        return "GroupList: null";
+        return null;
     }
 
     private FwClient fwClient;
