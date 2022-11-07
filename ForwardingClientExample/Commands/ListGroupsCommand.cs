@@ -1,4 +1,5 @@
-﻿using ForwardingClientExample.CommandSystem;
+﻿using ForwardingClient;
+using ForwardingClientExample.CommandSystem;
 
 namespace ForwardingClientExample.Commands;
 
@@ -6,18 +7,20 @@ namespace ForwardingClientExample.Commands;
 
 public class ListGroupsCommand : ITextCommand
 {
+    public ListGroupsCommand(FwClient fwClient)
+    {
+        this.fwClient = fwClient;
+    }
+
     public string CommandName => "list";
     public string Syntax => "/list";
 
     public string? Execute(string commandString)
     {
-        var arguments = CommandExtractor.GetArguments(commandString);
-        
-        foreach (var s in arguments)
-        {
-            Console.WriteLine(s);
-        }
-        
+        fwClient.PoolTask(fwClient.SendListGroupsRequest());
+
         return "GroupList: null";
     }
+
+    private FwClient fwClient;
 }
