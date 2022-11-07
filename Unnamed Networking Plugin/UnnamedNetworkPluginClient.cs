@@ -73,13 +73,13 @@ public class UnnamedNetworkPluginClient
     /// <param name="identificationPackage">The identification package for this client.</param>
     public UnnamedNetworkPluginClient(ILogger logger, IJsonSerializer jsonSerializer, IdentificationPackage identificationPackage)
     {
-        this.port = port;
+        // this.port = port;
         this.logger = logger;
         this.jsonSerializer = jsonSerializer;
         this.identificationPackage = identificationPackage;
         
         connectionIdentificationType = identificationPackage.GetType();
-        listener = new Listener(this, port, logger);
+        // listener = new Listener(this, port, logger);
         // listener.Start();
     }
     
