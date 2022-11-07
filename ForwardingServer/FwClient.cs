@@ -61,12 +61,12 @@ public class FwClient
         Client = new UnnamedNetworkPluginClient(port, Logger, JsonSerializer, IdentificationPackage);
         
         // TODO: This is only here until a way to start the Client without the listener active is created.
-        var stopListenerTask = Client.StopListener();
-
+        await Client.StopListener();
+        
         Client.ConnectionSuccessful += HandleConnectionSuccessful;
 
         var connectTask = Client.AddConnection(ipAddress, port);
-        await stopListenerTask;
+        
         return await connectTask;
     }
 
@@ -125,18 +125,22 @@ public class FwClient
                 await signal.WaitAsync(token);
 
                 Task[] tasks;
-            
+
                 lock (TaskPool)
                 {
                     tasks = TaskPool.ToArray();
                     TaskPool.Clear();
                 }
-            
+
                 await Task.WhenAll(tasks);
             }
             catch (OperationCanceledException)
             {
                 return;
+            }
+            catch (Exception e)
+            {
+                Logger.Log(this, $"Pooled task threw error: {e.Message}", LogType.Warning);
             }
         }
 
