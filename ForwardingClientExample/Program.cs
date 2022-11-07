@@ -70,6 +70,7 @@ public class Program
         groupCommands = new ITextCommand[]
         {
             new DisconnectCommand(fwClient),
+            new LeaveGroupCommand(fwClient),
         };
         
         commandFilter = new CommandFilter(disconnectedCommands);
