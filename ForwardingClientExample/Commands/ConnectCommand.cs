@@ -31,18 +31,13 @@ public class ConnectCommand : ITextCommand
             return "Invalid arguments. Syntax: " + Syntax;
         }
 
-        try
+        if (port is < 0 or > 65536)
         {
-            var result = client.ConnectAsync(ipAddress, port).GetAwaiter().GetResult();
-            if (result)
-                return $"Successfully connected to: {ipAddress}:{port}";
-
-            return $"Could not connected to: {ipAddress}:{port}";
+            return "Invalid arguments. Syntax: " + Syntax;
         }
-        catch (Exception e)
-        {
-            return e.Message;
-        }
+        
+        client.PoolTask(client.ConnectAsync(ipAddress, port));
+        return null;
     }
 
     private FwClient client;
