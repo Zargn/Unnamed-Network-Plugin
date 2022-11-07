@@ -72,6 +72,7 @@ public class Program
 
         SubscribeToPackages();
         fwClient.ClientDisconnected += HandleClientDisconnected;
+        fwClient.ClientConnected += HandleClientConnected;
     }
     
     public async Task Run()
@@ -102,7 +103,11 @@ public class Program
                 break;
 
             if (input[0] == '/')
-                Console.WriteLine(commandFilter.TryFindAndExecuteCommand(input[1..]));
+            {
+                var output = commandFilter.TryFindAndExecuteCommand(input[1..]);
+                if (output != null)
+                    Console.WriteLine(output);
+            }
             
             else if (ConnectionState == ConnectionState.ConnectedInGroup)
             {
@@ -137,6 +142,7 @@ public class Program
 
     private void HandleGroupsListPackage(object? o, PackageReceivedEventArgs args)
     {
+        Console.WriteLine("Available groups: ");
         var package = args.ReceivedPackage as GroupsListPackage;
         foreach (var groupInformation in package.GroupInformation)
         {
@@ -191,7 +197,14 @@ public class Program
         ConnectionState = ConnectionState.Disconnected;
         commandFilter.SetCommandList(disconnectedCommands);
     }
+
+    private void HandleClientConnected(object? o, EventArgs args)
+    {
+        Console.WriteLine("Connection successful!");
+    }
 }
+
+
 
 public enum ConnectionState
 {
