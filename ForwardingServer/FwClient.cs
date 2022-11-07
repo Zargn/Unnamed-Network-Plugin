@@ -21,6 +21,7 @@ public class FwClient
     private UnnamedNetworkPluginClient Client { get; set; }
     private Connection Connection { get; set; }
 
+
     public bool Connected { get; private set; }
     public bool InMenu { get; private set; }
     public bool InGroup { get; private set; }
@@ -41,8 +42,11 @@ public class FwClient
         
         PackageBroker.SubscribeToPackage<InGroupPackage>(HandleInGroupPackage);
         PackageBroker.SubscribeToPackage<InMenuPackage>(HandleInMenuPackage);
-    }
 
+        // Todo: Do I need to await or save this somehow to make sure I get the errors?
+        // executeTaskPoolTask = ExecuteTaskPool();
+    }
+    
 
 
     public async Task<bool> ConnectAsync(IPAddress ipAddress, int port)
@@ -94,13 +98,51 @@ public class FwClient
         InMenu = true;
         InGroup = false;
     }
-    
 
-    
+
+    private SemaphoreSlim signal = new(0, 1);
+    private List<Task> TaskPool = new();
+
+    public void PoolTask(Task taskToPool)
+    {
+        lock (TaskPool)
+        {
+            TaskPool.Add(taskToPool);
+        }
+
+        signal.Release();
+    }
+
+    public async Task GetTaskPoolTask(CancellationToken token)
+    {
+        while (true)
+        {
+            try
+            {
+                await signal.WaitAsync(token);
+
+                Task[] tasks;
+            
+                lock (TaskPool)
+                {
+                    tasks = TaskPool.ToArray();
+                    TaskPool.Clear();
+                }
+            
+                await Task.WhenAll(tasks);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+
+    }
     
     public async Task DisconnectAsync()
     {
         Connection.Disconnect();
+        // Todo: Add "Connection = null;" ?
     }
 
     public async Task SendListGroupsRequest()
