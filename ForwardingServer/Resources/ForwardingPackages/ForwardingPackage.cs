@@ -7,26 +7,8 @@ namespace ForwardingServer.Resources.ForwardingPackages;
 /// Forwarding Package class. Wraps a pre-made json string in a package together with targetInformation for the
 /// destination.
 /// </summary>
-public class ForwardingPackage : Package
-{
-    public object TargetInformation { get; init; }
-    
-    public string PackageJson { get; init; }
-    
-    public ForwardingPackage(string packageJson, IConnectionInformation targetInformation)
-    {
-        PackageJson = packageJson;
-        TargetInformation = targetInformation;
-    }
-}
-
-/*
-/// <summary>
-/// Forwarding Package class. Wraps a pre-made json string in a package together with targetInformation for the
-/// destination.
-/// </summary>
 public class ForwardingPackage<T> : Package
-where T : IConnectionInformation
+    where T : IConnectionInformation
 {
     public T TargetInformation { get; init; }
     
@@ -43,7 +25,3 @@ where T : IConnectionInformation
         return TargetInformation;
     }
 }
-
-
-
-*/

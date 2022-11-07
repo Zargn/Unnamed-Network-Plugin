@@ -177,11 +177,11 @@ public class FwClient
         await SendJoinGroupRequest(new GroupSettings(maxSize, title, description));
     }
 
-    public async Task SendPackageToGroupMember<T>(T package, IConnectionInformation connectionInformation)
-        where T : Package
+    public async Task SendPackageToGroupMember<T, TConnectionInformationType>(T package, TConnectionInformationType connectionInformation)
+        where T : Package where TConnectionInformationType : IConnectionInformation
     {
         var packageJson = JsonSerializer.Serialize(package);
-        await Connection.SendPackage(new ForwardingPackage(packageJson, connectionInformation));
+        await Connection.SendPackage(new ForwardingPackage<TConnectionInformationType>(packageJson, (TConnectionInformationType)connectionInformation));
     }
 
     public async Task SendPackageToAllGroupMembers<T>(T package) where T : Package

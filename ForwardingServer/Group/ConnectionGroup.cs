@@ -67,7 +67,7 @@ where TConnectionInformationType : IConnectionInformation
 
     private void SetUpSubscribers()
     {
-        Broker.SubscribeToPackage<ForwardingPackage>(HandleForwardingPackage);
+        Broker.SubscribeToPackage<ForwardingPackage<TConnectionInformationType>>(HandleForwardingPackage);
         Broker.SubscribeToPackage<ForwardingPackageAll>(HandleForwardingPackageAll);
         Broker.SubscribeToPackage<RequestGroupInformationPackage>(HandleRequestGroupInformationPackage);
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
@@ -81,7 +81,7 @@ where TConnectionInformationType : IConnectionInformation
     
     private async void HandleForwardingPackage(object? o, PackageReceivedEventArgs args)
     {
-        var package = args.ReceivedPackage as ForwardingPackage;
+        var package = args.ReceivedPackage as ForwardingPackage<TConnectionInformationType>;
         var targetInfo = package.TargetInformation as IConnectionInformation;
         
         await client.SendJson(package.PackageJson, targetInfo);
