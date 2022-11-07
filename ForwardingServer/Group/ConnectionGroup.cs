@@ -9,7 +9,8 @@ using Unnamed_Networking_Plugin.Resources;
 
 namespace ForwardingServer.Group;
 
-public class ConnectionGroup
+public class ConnectionGroup<TConnectionInformationType>
+where TConnectionInformationType : IConnectionInformation
 {
     public GroupInformation GroupInformation => new(groupSettings, MemberCount);
     public PackageBroker Broker { get; } = new();
@@ -18,9 +19,9 @@ public class ConnectionGroup
     private readonly GroupSettings groupSettings;
     private List<Connection> members = new();
     private UnnamedNetworkPluginClient client;
-    private FwServer fwServer;
+    private FwServer<TConnectionInformationType> fwServer;
 
-    public ConnectionGroup(GroupSettings groupSettings, UnnamedNetworkPluginClient client, FwServer fwServer)
+    public ConnectionGroup(GroupSettings groupSettings, UnnamedNetworkPluginClient client, FwServer<TConnectionInformationType> fwServer)
     {
         this.groupSettings = groupSettings;
         this.client = client;
@@ -43,7 +44,7 @@ public class ConnectionGroup
 
         await sendPackageTask;
         
-        await SendPackageToEveryoneInGroup(new ClientJoinedGroupPackage(connection.ConnectionInformation));
+        await SendPackageToEveryoneInGroup(new ClientJoinedGroupPackage<TConnectionInformationType>((TConnectionInformationType)connection.ConnectionInformation));
         
         return true;
     }

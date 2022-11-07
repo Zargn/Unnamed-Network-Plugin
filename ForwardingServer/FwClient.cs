@@ -61,7 +61,7 @@ public class FwClient
         Client = new UnnamedNetworkPluginClient(Logger, JsonSerializer, IdentificationPackage);
         
         // TODO: This is only here until a way to start the Client without the listener active is created.
-        await Client.StopListener();
+        // await Client.StopListener();
         
         Client.ConnectionSuccessful += HandleConnectionSuccessful;
 
@@ -140,7 +140,7 @@ public class FwClient
             }
             catch (Exception e)
             {
-                Logger.Log(this, $"Pooled task threw error: {e.Message}", LogType.Warning);
+                Logger.Log(this, $"Pooled task threw error: {e}", LogType.Warning);
             }
         }
 

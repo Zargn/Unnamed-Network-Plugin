@@ -8,7 +8,7 @@ namespace ForwardingServerExample;
 
 public class ForwardingServerExample
 {
-    public static void Main()
+    public static async Task Main()
     {
         // var jsonSerializer = new JsonSerializerAdapter();
         // var fwp = new ForwardingPackage("hiJson", new UserIdentification("Test"));
@@ -25,8 +25,10 @@ public class ForwardingServerExample
         // Temp();
 
         var server = new ForwardingServerExample();
-        server.StartServer().GetAwaiter().GetResult();
+        await server.StartServer();
         // task.Wait();
+        Console.WriteLine("Press enter to close window.");
+        Console.ReadLine();
     }
     
     // private static async void Temp()
@@ -40,7 +42,7 @@ public class ForwardingServerExample
         var identification = new UserIdentification("ForwardingServer");
         var jsonSerializer = new JsonSerializerAdapter();
         var logFileController = new LogFileController();
-        var forwardingServer = new FwServer(25564, logFileController, jsonSerializer, new UserIdentificationPackage(identification));
+        var forwardingServer = new FwServer<UserIdentification>(25564, logFileController, jsonSerializer, new UserIdentificationPackage(identification));
 
         var serverTask = forwardingServer.Run();
         
