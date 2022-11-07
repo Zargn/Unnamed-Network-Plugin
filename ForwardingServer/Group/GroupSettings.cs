@@ -1,11 +1,32 @@
 ﻿namespace ForwardingServer;
 
-public record GroupSettings(int MaxSize, string Title, string Description)
+public class GroupSettings
 {
-    public virtual bool Equals(GroupSettings? other)
+    public GroupSettings(int maxSize, string title, string description)
     {
-        if (other == null)
-            return false;
-        return Title == other.Title;
+        MaxSize = maxSize;
+        Title = title;
+        Description = description;
+    }
+
+    public int MaxSize { get; init; }
+    public string Title { get; init; }
+    public string Description { get; init; }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is GroupSettings settings)
+            return Title == settings.Title;
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return Title.GetHashCode();
+    }
+
+    public override string ToString()
+    {
+        return $"{Title} | {Description} | {MaxSize}";
     }
 }

@@ -122,6 +122,12 @@ public class Program
         await taskPool;
     }
 
+    
+    // /connect *127.0.0.1* *25564*
+    // /creategroup *testgroup* *this is a test* *5*
+    // 
+
+
     private void SubscribeToPackages()
     {
         fwClient.PackageBroker.SubscribeToPackage<InMenuPackage>(HandleInMenuPackage);
