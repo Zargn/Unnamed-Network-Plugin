@@ -12,7 +12,7 @@ namespace ForwardingClientExample;
 
 public class Program
 {
-    public static void Main()
+    public static async Task Main()
     {
         Console.WriteLine("Please enter UserName: ");
         var userName = Console.ReadLine() ?? "NoName";
@@ -23,7 +23,9 @@ public class Program
         }
 
         Program program = new(userName);
-        program.Run();
+        var runTask = program.Run();
+
+        await runTask;
 
         // Todo: use the FwClient to connect to a forwarding server and subscribe to all events.
 
@@ -42,12 +44,15 @@ public class Program
 
     private CommandFilter commandFilter;
     private FwClient fwClient;
-
-
+    
+    
+    
     public Program(string username)
     {
         fwClient = new FwClient(new LogFileController(), new JsonSerializerAdapter(), new UserIdentificationPackage(new UserIdentification(username)));
 
+        
+        
         disconnectedCommands = new ITextCommand[]
         {
             new ConnectCommand(fwClient)
@@ -55,7 +60,7 @@ public class Program
         
         menuCommands = new ITextCommand[]
         {
-            new ListGroupsCommand(),
+            new ListGroupsCommand(fwClient),
         };
 
         groupCommands = new ITextCommand[]
@@ -69,20 +74,45 @@ public class Program
         fwClient.ClientDisconnected += HandleClientDisconnected;
     }
     
-    public void Run()
+    public async Task Run()
     {
-        var commandFilter = new CommandFilter(menuCommands);
+        CancellationTokenSource cancelPool = new();
+        var taskPool = fwClient.GetTaskPoolTask(cancelPool.Token);
+
         
         while (true)
         {
-            var input = Console.ReadLine();
-            if (input[0] == '/')
+            if (taskPool.IsCompleted)
             {
-                Console.WriteLine(commandFilter.TryFindAndExecuteCommand(input.Substring(1)));
+                await taskPool;
             }
             
+            var input = Console.ReadLine();
+
+            if (input == null)
+            {
+                Console.WriteLine("Input was null. Ending loop.");
+                break;
+            }
+            
+            if (input == "")
+                continue;
+
+            if (input == "/quit")
+                break;
+
+            if (input[0] == '/')
+                Console.WriteLine(commandFilter.TryFindAndExecuteCommand(input[1..]));
+            
+            else if (ConnectionState == ConnectionState.ConnectedInGroup)
+            {
+                
+            }
+
             
         }
+
+        await taskPool;
     }
 
     private void SubscribeToPackages()
