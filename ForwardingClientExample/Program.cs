@@ -64,11 +64,12 @@ public class Program
             new ListGroupsCommand(fwClient),
             new CreateGroupCommand(fwClient),
             new JoinGroupCommand(fwClient),
+            new DisconnectCommand(fwClient),
         };
 
         groupCommands = new ITextCommand[]
         {
-
+            new DisconnectCommand(fwClient),
         };
         
         commandFilter = new CommandFilter(disconnectedCommands);
