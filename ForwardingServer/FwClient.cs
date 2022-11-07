@@ -58,7 +58,7 @@ public class FwClient
             return false;
         }
 
-        Client = new UnnamedNetworkPluginClient(port, Logger, JsonSerializer, IdentificationPackage);
+        Client = new UnnamedNetworkPluginClient(Logger, JsonSerializer, IdentificationPackage);
         
         // TODO: This is only here until a way to start the Client without the listener active is created.
         await Client.StopListener();
