@@ -61,6 +61,7 @@ public class Program
         menuCommands = new ITextCommand[]
         {
             new ListGroupsCommand(fwClient),
+            new CreateGroupCommand(fwClient)
         };
 
         groupCommands = new ITextCommand[]
