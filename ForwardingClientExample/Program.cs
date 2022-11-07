@@ -56,13 +56,14 @@ public class Program
         
         disconnectedCommands = new ITextCommand[]
         {
-            new ConnectCommand(fwClient)
+            new ConnectCommand(fwClient),
         };
         
         menuCommands = new ITextCommand[]
         {
             new ListGroupsCommand(fwClient),
-            new CreateGroupCommand(fwClient)
+            new CreateGroupCommand(fwClient),
+            new JoinGroupCommand(fwClient),
         };
 
         groupCommands = new ITextCommand[]
