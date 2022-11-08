@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using ForwardingClient;
 using ForwardingClientExample.Commands;
 using ForwardingClientExample.CommandSystem;
@@ -163,6 +164,7 @@ public class Program
         fwClient.PackageBroker.SubscribeToPackage<ClientJoinedGroupPackage<UserIdentification>>(HandleClientJoinedGroupPackage);
         fwClient.PackageBroker.SubscribeToPackage<ClientLeftGroupPackage<UserIdentification>>(HandleClientLeftGroupPackage);
         fwClient.PackageBroker.SubscribeToPackage<GroupInformationPackage>(HandleGroupInformationPackage);
+        fwClient.PackageBroker.SubscribeToPackage<UserListPackage<UserIdentification>>(HandleListUsersPackage);
         fwClient.PackageBroker.SubscribeToPackage<PrivateMessagePackage>(HandlePrivateMessagePackage);
         fwClient.PackageBroker.SubscribeToPackage<MessagePackage>(HandleMessagePackage);
         
@@ -212,6 +214,16 @@ public class Program
         var package = args.ReceivedPackage as GroupInformationPackage;
         Console.WriteLine("Current group:");
         Console.WriteLine(package.GroupInformation);
+    }
+
+    private void HandleListUsersPackage(object? o, PackageReceivedEventArgs args)
+    {
+        Console.WriteLine("Connected users: ");
+        var package = args.ReceivedPackage as UserListPackage<UserIdentification>;
+        foreach (var user in package.Users)
+        {
+            Console.WriteLine(user);
+        }
     }
 
     private void HandlePrivateMessagePackage(object? o, PackageReceivedEventArgs args)
