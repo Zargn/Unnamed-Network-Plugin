@@ -195,6 +195,11 @@ public class FwClient
         await Connection.SendPackage(new RequestGroupInformationPackage());
     }
 
+    public async Task SendUserListRequest()
+    {
+        await Connection.SendPackage(new RequestUserListPackage());
+    }
+
     public async Task SendLeaveGroupRequest()
     {
         await Connection.SendPackage(new LeaveGroupPackage());
