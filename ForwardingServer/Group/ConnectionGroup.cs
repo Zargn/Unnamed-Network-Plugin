@@ -56,7 +56,7 @@ where TConnectionInformationType : IConnectionInformation
         
         members.Remove(connection);
         
-        await SendPackageToEveryoneInGroup(new ClientLeftGroupPackage(connection.ConnectionInformation));
+        await SendPackageToEveryoneInGroup(new ClientLeftGroupPackage<TConnectionInformationType>((TConnectionInformationType)connection.ConnectionInformation));
     }
 
     private async Task SendPackageToEveryoneInGroup(Package package)

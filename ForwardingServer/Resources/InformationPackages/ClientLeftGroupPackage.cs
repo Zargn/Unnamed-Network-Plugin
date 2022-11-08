@@ -3,12 +3,18 @@ using Unnamed_Networking_Plugin.Resources;
 
 namespace ForwardingServer.Resources.InformationPackages;
 
-public class ClientLeftGroupPackage : Package
+public class ClientLeftGroupPackage<T> : Package
+    where T : IConnectionInformation
 {
-    public object ConnectionInformation { get; init; }
+    public T ConnectionInformation { get; init; }
 
-    public ClientLeftGroupPackage(IConnectionInformation connectionInformation)
+    public ClientLeftGroupPackage(T connectionInformation)
     {
         ConnectionInformation = connectionInformation;
+    }
+    
+    public IConnectionInformation GetClientInformation()
+    {
+        return ConnectionInformation;
     }
 }

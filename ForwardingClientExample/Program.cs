@@ -137,7 +137,7 @@ public class Program
         fwClient.PackageBroker.SubscribeToPackage<GroupsListPackage>(HandleGroupsListPackage);
         fwClient.PackageBroker.SubscribeToPackage<InGroupPackage>(HandleInGroupPackage);
         fwClient.PackageBroker.SubscribeToPackage<ClientJoinedGroupPackage<UserIdentification>>(HandleClientJoinedGroupPackage);
-        fwClient.PackageBroker.SubscribeToPackage<ClientLeftGroupPackage>(HandleClientLeftGroupPackage);
+        fwClient.PackageBroker.SubscribeToPackage<ClientLeftGroupPackage<UserIdentification>>(HandleClientLeftGroupPackage);
         fwClient.PackageBroker.SubscribeToPackage<GroupInformationPackage>(HandleGroupInformationPackage);
         fwClient.PackageBroker.SubscribeToPackage<WarningPackage>(HandleWarningPackage);
         fwClient.PackageBroker.SubscribeToPackage<ErrorPackage>(HandleErrorPackage);
@@ -171,12 +171,12 @@ public class Program
     private void HandleClientJoinedGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         var package = args.ReceivedPackage as ClientJoinedGroupPackage<UserIdentification>;
-        Console.WriteLine($"{package.GetClientInformation()} Joined the group.");
+        Console.WriteLine($"{package.ClientInformation} Joined the group.");
     }
     
     private void HandleClientLeftGroupPackage(object? o, PackageReceivedEventArgs args)
     {
-        var package = args.ReceivedPackage as ClientLeftGroupPackage;
+        var package = args.ReceivedPackage as ClientLeftGroupPackage<UserIdentification>;
         Console.WriteLine($"{package.ConnectionInformation} Left the group.");
     }
     
