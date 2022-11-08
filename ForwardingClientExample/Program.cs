@@ -45,12 +45,17 @@ public class Program
 
     private CommandFilter commandFilter;
     private FwClient fwClient;
-    
+
+    private UserIdentification userIdentification;
+    private IJsonSerializer jsonSerializer;
     
     
     public Program(string username)
     {
-        fwClient = new FwClient(new LogFileController(), new JsonSerializerAdapter(), new UserIdentificationPackage(new UserIdentification(username)));
+        userIdentification = new UserIdentification(username);
+        jsonSerializer = new JsonSerializerAdapter();
+        
+        fwClient = new FwClient(new LogFileController(), jsonSerializer, new UserIdentificationPackage(userIdentification));
 
         
         
@@ -72,6 +77,7 @@ public class Program
             new DisconnectCommand(fwClient),
             new LeaveGroupCommand(fwClient),
             new RequestGroupInformationCommand(fwClient),
+            new SendPrivateMessageCommand(fwClient, userIdentification),
         };
         
         commandFilter = new CommandFilter(disconnectedCommands);
