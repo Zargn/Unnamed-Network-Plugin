@@ -78,6 +78,7 @@ public class Program
             new LeaveGroupCommand(fwClient),
             new RequestGroupInformationCommand(fwClient),
             new SendPrivateMessageCommand(fwClient, userIdentification),
+            new ListUsersCommand(fwClient),
         };
         
         commandFilter = new CommandFilter(disconnectedCommands);
