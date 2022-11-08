@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
 using ForwardingClient;
 using ForwardingClientExample.Commands;
 using ForwardingClientExample.CommandSystem;
@@ -23,7 +24,14 @@ public class Program
             userName = "NoName";
         }
 
-        Program program = new(userName);
+
+        Console.WriteLine("Write y to enable debug logs. Press enter to skip...");
+        var input = Console.ReadLine();
+
+        var enableDebugLogs = input.ToLower() == "y";
+            
+            
+        Program program = new(userName, enableDebugLogs);
         var runTask = program.Run();
 
         await runTask;
@@ -50,15 +58,13 @@ public class Program
     private IJsonSerializer jsonSerializer;
     
     
-    public Program(string username)
+    public Program(string username, bool printLog)
     {
         userIdentification = new UserIdentification(username);
         jsonSerializer = new JsonSerializerAdapter();
         
-        fwClient = new FwClient(new LogFileController(), jsonSerializer, new UserIdentificationPackage(userIdentification));
+        fwClient = new FwClient(new LogFileController(printLog), jsonSerializer, new UserIdentificationPackage(userIdentification));
 
-        
-        
         disconnectedCommands = new ITextCommand[]
         {
             new ConnectCommand(fwClient),
