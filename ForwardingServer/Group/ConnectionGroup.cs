@@ -101,6 +101,15 @@ where TConnectionInformationType : IConnectionInformation
         await connection.SendPackage(new GroupInformationPackage(GroupInformation));
     }
 
+    private async void HandleRequestPlayerListPackage(object? o, PackageReceivedEventArgs args)
+    {
+        var connection = client.GetConnectionFromList(args.ConnectionInformation);
+
+        var users = members.Select(userConnection => (TConnectionInformationType) userConnection.ConnectionInformation).ToList();
+
+        await connection.SendPackage(new UserListPackage<TConnectionInformationType>(users));
+    }
+
     private async void HandleLeaveGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
