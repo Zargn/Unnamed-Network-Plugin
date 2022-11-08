@@ -124,7 +124,8 @@ public class Program
             
             else if (ConnectionState == ConnectionState.ConnectedInGroup)
             {
-                
+                var package = new MessagePackage(input, userIdentification);
+                fwClient.PoolTask(fwClient.SendPackageToAllGroupMembers(package));
             }
 
             
