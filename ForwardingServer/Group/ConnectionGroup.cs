@@ -70,6 +70,7 @@ where TConnectionInformationType : IConnectionInformation
         Broker.SubscribeToPackage<ForwardingPackage<TConnectionInformationType>>(HandleForwardingPackage);
         Broker.SubscribeToPackage<ForwardingPackageAll>(HandleForwardingPackageAll);
         Broker.SubscribeToPackage<RequestGroupInformationPackage>(HandleRequestGroupInformationPackage);
+        Broker.SubscribeToPackage<RequestUserListPackage>(HandleRequestUserListPackage);
         Broker.SubscribeToPackage<LeaveGroupPackage>(HandleLeaveGroupPackage);
     }
 
@@ -101,7 +102,7 @@ where TConnectionInformationType : IConnectionInformation
         await connection.SendPackage(new GroupInformationPackage(GroupInformation));
     }
 
-    private async void HandleRequestPlayerListPackage(object? o, PackageReceivedEventArgs args)
+    private async void HandleRequestUserListPackage(object? o, PackageReceivedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
 
