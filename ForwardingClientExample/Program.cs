@@ -56,18 +56,21 @@ public class Program
 
     private UserIdentification userIdentification;
     private IJsonSerializer jsonSerializer;
+    private LogFileController logFileController;
     
     
     public Program(string username, bool printLog)
     {
         userIdentification = new UserIdentification(username);
         jsonSerializer = new JsonSerializerAdapter();
+        logFileController = new LogFileController(printLog);
         
-        fwClient = new FwClient(new LogFileController(printLog), jsonSerializer, new UserIdentificationPackage(userIdentification));
+        fwClient = new FwClient(logFileController, jsonSerializer, new UserIdentificationPackage(userIdentification));
 
         disconnectedCommands = new ITextCommand[]
         {
             new ConnectCommand(fwClient),
+            new PrintLogsCommand(logFileController),
         };
         
         menuCommands = new ITextCommand[]
@@ -76,6 +79,7 @@ public class Program
             new CreateGroupCommand(fwClient),
             new JoinGroupCommand(fwClient),
             new DisconnectCommand(fwClient),
+            new PrintLogsCommand(logFileController),
         };
 
         groupCommands = new ITextCommand[]
@@ -85,6 +89,7 @@ public class Program
             new RequestGroupInformationCommand(fwClient),
             new SendPrivateMessageCommand(fwClient, userIdentification),
             new ListUsersCommand(fwClient),
+            new PrintLogsCommand(logFileController),
         };
         
         commandFilter = new CommandFilter(disconnectedCommands);
