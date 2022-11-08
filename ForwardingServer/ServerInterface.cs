@@ -89,7 +89,6 @@ where TConnectionInformationType : IConnectionInformation
     private async void HandleJoinGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
-        RemoveFromMenu(connection);
 
         var package = args.ReceivedPackage as JoinGroupPackage;
         
