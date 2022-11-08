@@ -149,6 +149,7 @@ public class Program
         fwClient.PackageBroker.SubscribeToPackage<ClientLeftGroupPackage<UserIdentification>>(HandleClientLeftGroupPackage);
         fwClient.PackageBroker.SubscribeToPackage<GroupInformationPackage>(HandleGroupInformationPackage);
         fwClient.PackageBroker.SubscribeToPackage<PrivateMessagePackage>(HandlePrivateMessagePackage);
+        fwClient.PackageBroker.SubscribeToPackage<MessagePackage>(HandleMessagePackage);
         
         fwClient.PackageBroker.SubscribeToPackage<WarningPackage>(HandleWarningPackage);
         fwClient.PackageBroker.SubscribeToPackage<ErrorPackage>(HandleErrorPackage);
@@ -202,6 +203,12 @@ public class Program
     {
         var package = args.ReceivedPackage as PrivateMessagePackage;
         Console.WriteLine($"{package.Sender} to you: {package.Message}");
+    }
+
+    private void HandleMessagePackage(object? o, PackageReceivedEventArgs args)
+    {
+        var package = args.ReceivedPackage as MessagePackage;
+        Console.WriteLine($"({package.Sender}): {package.Message}");
     }
     
     // General
