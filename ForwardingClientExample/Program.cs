@@ -67,6 +67,9 @@ public class Program
         
         fwClient = new FwClient(logFileController, jsonSerializer, new UserIdentificationPackage(userIdentification));
 
+        string tempString = printLog ? "Enabled" : "Disabled";
+        Console.WriteLine($"Started program with settings: Username: {username}, DebugLogs: {tempString}");
+        
         disconnectedCommands = new ITextCommand[]
         {
             new ConnectCommand(fwClient),
