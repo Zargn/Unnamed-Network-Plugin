@@ -71,6 +71,7 @@ public class Program
         {
             new DisconnectCommand(fwClient),
             new LeaveGroupCommand(fwClient),
+            new RequestGroupInformationCommand(fwClient),
         };
         
         commandFilter = new CommandFilter(disconnectedCommands);
