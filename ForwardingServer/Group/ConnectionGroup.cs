@@ -12,6 +12,8 @@ namespace ForwardingServer.Group;
 public class ConnectionGroup<TConnectionInformationType>
 where TConnectionInformationType : IConnectionInformation
 {
+    private const int AutoDeleteTimeSeconds = 30;
+    
     public GroupInformation GroupInformation => new(groupSettings, MemberCount);
     public PackageBroker Broker { get; } = new();
     public int MemberCount => members.Count;
@@ -34,6 +36,8 @@ where TConnectionInformationType : IConnectionInformation
     {
         if (MemberCount >= groupSettings.MaxSize)
             return false;
+        
+        autoDeleteToken.Cancel();
 
         var sendPackageTask = connection.SendPackage(new InGroupPackage());
 
@@ -57,6 +61,12 @@ where TConnectionInformationType : IConnectionInformation
         members.Remove(connection);
         
         await SendPackageToEveryoneInGroup(new ClientLeftGroupPackage<TConnectionInformationType>((TConnectionInformationType)connection.ConnectionInformation));
+
+        if (MemberCount == 0)
+        {
+            autoDeleteToken = new CancellationTokenSource();
+            autoDeleteTask = AutoDelete();
+        }
     }
 
     private async Task SendPackageToEveryoneInGroup(Package package)
@@ -65,6 +75,27 @@ where TConnectionInformationType : IConnectionInformation
         await Task.WhenAll(sendTasks);
     }
 
+
+    private CancellationTokenSource autoDeleteToken = new();
+    private Task autoDeleteTask;
+    
+    public async Task AutoDelete()
+    {
+        Console.WriteLine("Started auto delete task");
+        try
+        {
+            await Task.Delay(AutoDeleteTimeSeconds * 1000, autoDeleteToken.Token);
+            fwServer.serverInterface.RemoveGroup(groupSettings);
+            Console.WriteLine("Deleting group");
+        }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine("Abort delete due to cancelation");
+            return;
+        }
+    }
+    
+    
     private void SetUpSubscribers()
     {
         Broker.SubscribeToPackage<ForwardingPackage<TConnectionInformationType>>(HandleForwardingPackage);

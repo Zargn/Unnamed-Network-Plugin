@@ -40,6 +40,17 @@ where TConnectionInformationType : IConnectionInformation
         connection.ClientDisconnected -= HandleClientDisconnected;
     }
 
+    public bool RemoveGroup(GroupSettings groupSettings)
+    {
+        var group = connectionGroups[groupSettings];
+
+        if (group.MemberCount != 0)
+            return false;
+
+        connectionGroups.Remove(groupSettings);
+        return true;
+    }
+
     private void SetUpSubscribers()
     {
         Broker.SubscribeToPackage<RequestGroupsListPackage>(HandleListGroupsPackage);

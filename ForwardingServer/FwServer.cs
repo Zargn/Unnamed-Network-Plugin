@@ -13,7 +13,7 @@ where TConnectionInformationType : IConnectionInformation
     private IJsonSerializer jsonSerializer { get; }
     private IdentificationPackage identificationPackage { get; }
     private Type identificationType { get; }
-    private ServerInterface<TConnectionInformationType> serverInterface { get; set; }
+    internal ServerInterface<TConnectionInformationType> serverInterface { get; set; }
     private UnnamedNetworkPluginClient client { get; set; }
     
     public bool Running { get; private set; }
