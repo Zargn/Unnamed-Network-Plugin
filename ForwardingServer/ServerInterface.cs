@@ -4,20 +4,21 @@ using ForwardingServer.Resources.CommandPackages;
 using ForwardingServer.Resources.InformationPackages;
 using Unnamed_Networking_Plugin;
 using Unnamed_Networking_Plugin.Broker;
-
+using Unnamed_Networking_Plugin.Interfaces;
 
 
 namespace ForwardingServer;
 
-public class ServerInterface
+public class ServerInterface<TConnectionInformationType>
+where TConnectionInformationType : IConnectionInformation
 {
-    private Dictionary<GroupSettings, ConnectionGroup> connectionGroups = new();
+    private Dictionary<GroupSettings, ConnectionGroup<TConnectionInformationType>> connectionGroups = new();
     private UnnamedNetworkPluginClient client;
-    private FwServer FwServer { get; }
+    private FwServer<TConnectionInformationType> FwServer { get; }
     private PackageBroker Broker { get; } = new();
 
 
-    public ServerInterface(UnnamedNetworkPluginClient client, FwServer fwServer)
+    public ServerInterface(UnnamedNetworkPluginClient client, FwServer<TConnectionInformationType> fwServer)
     {
         this.client = client;
         FwServer = fwServer;
@@ -37,6 +38,17 @@ public class ServerInterface
     {
         connection.PackageReceived -= Broker.InvokeSubscribers;
         connection.ClientDisconnected -= HandleClientDisconnected;
+    }
+
+    public bool RemoveGroup(GroupSettings groupSettings)
+    {
+        var group = connectionGroups[groupSettings];
+
+        if (group.MemberCount != 0)
+            return false;
+
+        connectionGroups.Remove(groupSettings);
+        return true;
     }
 
     private void SetUpSubscribers()
@@ -75,7 +87,7 @@ public class ServerInterface
             return;
         }
 
-        var newGroup = new ConnectionGroup(package.GroupSettings, client, FwServer);
+        var newGroup = new ConnectionGroup<TConnectionInformationType>(package.GroupSettings, client, FwServer);
         
         var joinGroupTask = newGroup.Join(connection);
 
@@ -88,13 +100,12 @@ public class ServerInterface
     private async void HandleJoinGroupPackage(object? o, PackageReceivedEventArgs args)
     {
         var connection = client.GetConnectionFromList(args.ConnectionInformation);
-        RemoveFromMenu(connection);
 
         var package = args.ReceivedPackage as JoinGroupPackage;
         
         try
         {
-            var targetGroup = connectionGroups[package.TargetGroupInformation.GroupSettings];
+            var targetGroup = connectionGroups[package.TargetGroupSettings];
             if (await targetGroup.Join(connection))
             {
                 RemoveFromMenu(connection);

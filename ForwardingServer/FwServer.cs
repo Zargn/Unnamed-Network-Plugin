@@ -5,14 +5,15 @@ using Unnamed_Networking_Plugin.Resources;
 
 namespace ForwardingServer;
 
-public class FwServer
+public class FwServer<TConnectionInformationType>
+where TConnectionInformationType : IConnectionInformation
 {
     private int port { get; }
     private ILogger logger { get; }
     private IJsonSerializer jsonSerializer { get; }
     private IdentificationPackage identificationPackage { get; }
     private Type identificationType { get; }
-    private ServerInterface serverInterface { get; set; }
+    internal ServerInterface<TConnectionInformationType> serverInterface { get; set; }
     private UnnamedNetworkPluginClient client { get; set; }
     
     public bool Running { get; private set; }
@@ -46,7 +47,7 @@ public class FwServer
 
         client.ConnectionSuccessful += ConnectionSuccessfulHandler;
         
-        serverInterface = new ServerInterface(client, this);
+        serverInterface = new ServerInterface<TConnectionInformationType>(client, this);
     }
 
     public async Task Stop()
