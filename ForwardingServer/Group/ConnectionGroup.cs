@@ -123,7 +123,8 @@ where TConnectionInformationType : IConnectionInformation
     {
         var package = args.ReceivedPackage as ForwardingPackageAll;
 
-        List<Task> sendTasks = members.Select(connection => connection.SendJson(package.PackageJson)).ToList();
+        var sendTasks = (from connection in members where connection.ConnectionInformation != args.ConnectionInformation select connection.SendJson(package.PackageJson)).ToList();
+        
         await Task.WhenAll(sendTasks);
     }
 
