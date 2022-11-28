@@ -121,7 +121,6 @@ where TConnectionInformationType : IConnectionInformation
             string warningMessage = "Provided group information does not exist on this server.";
             var warningPackage = new WarningPackage(warningMessage, WarningType.GroupNotFound);
             await connection.SendPackage(warningPackage);
-            throw;
         }
     }
 }
